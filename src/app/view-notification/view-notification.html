@@ -1,0 +1,80 @@
+<div class="view-notification-container">
+  @if (isLoading()) {
+  <div class="loading-container">
+    <div class="loading-spinner">Loading notification...</div>
+  </div>
+  } @else if (notification(); as notice) {
+  <div class="notification-header">
+    <div class="breadcrumb">
+      <a routerLink="/" class="breadcrumb-link">← Back to Notifications</a>
+    </div>
+
+    <div class="title-section">
+      <h1>{{ notice.title }}</h1>
+
+      @if (userService.isAdmin()) {
+      <div class="admin-actions">
+        <a [routerLink]="['/notifications', notice.slug, 'edit']" class="edit-btn">
+          Edit Notification
+        </a>
+      </div>
+      }
+    </div>
+
+    <div class="notification-meta">
+      <div class="meta-item">
+        <strong>Published:</strong>
+        <span>{{ notice.datetime | date : 'full' }}</span>
+      </div>
+
+      <div class="meta-item">
+        <strong>Affected Products:</strong>
+        <div class="affected-products">
+          @for (productId of notice.affectedProducts; track productId) { @if
+          (getProductById(productId); as product) {
+          <span class="product-tag">{{ product.name }}</span>
+          } }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notification-content">
+    <div class="description-section">
+      <h2>Details</h2>
+      <div class="description-text">
+        {{ notice.description }}
+      </div>
+    </div>
+
+    <div class="products-section">
+      <h2>Affected Products</h2>
+      <div class="products-list">
+        @for (productId of notice.affectedProducts; track productId) { @if
+        (getProductById(productId); as product) {
+        <div class="product-card">
+          <h3>{{ product.name }}</h3>
+          <p>{{ product.description }}</p>
+        </div>
+        } }
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-section">
+    <a routerLink="/" class="back-btn"> ← Back to All Notifications </a>
+
+    @if (userService.isAdmin()) {
+    <a [routerLink]="['/notifications', notice.slug, 'edit']" class="edit-btn">
+      Edit Notification
+    </a>
+    }
+  </div>
+  } @else {
+  <div class="error-container">
+    <h1>Notification Not Found</h1>
+    <p>The notification you're looking for doesn't exist or has been removed.</p>
+    <a routerLink="/" class="back-btn"> ← Back to All Notifications </a>
+  </div>
+  }
+</div>

@@ -6,17 +6,7 @@ import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
-  template: `
-    <div class="app-container">
-      <app-navigation />
-
-      <main class="main-content">
-        <router-outlet />
-      </main>
-
-      <app-footer />
-    </div>
-  `,
+  templateUrl: './app.html',
   styles: `
     .app-container {
       min-height: 100vh;

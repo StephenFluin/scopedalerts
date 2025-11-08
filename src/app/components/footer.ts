@@ -3,25 +3,7 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'app-footer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <footer class="footer">
-      <div class="footer-content">
-        <p class="attribution">
-          Created by
-          <a href="https://fluin.io" class="creator-link">Stephen Fluin</a>
-          |
-          <a
-            href="https://github.com/StephenFluin/scopedalerts"
-            target="_blank"
-            class="github-link"
-          >
-            View on GitHub
-          </a>
-        </p>
-        <p class="copyright">© {{ currentYear }} ScopedAlerts. Built with Angular and Firebase.</p>
-      </div>
-    </footer>
-  `,
+  templateUrl: './footer.html',
   styles: `
     .footer {
       background-color: #f5f5f5;
