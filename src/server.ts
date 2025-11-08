@@ -12,17 +12,128 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
+// Enable trust proxy for proper IP detection
+app.set('trust proxy', true);
+
+// CORS middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  );
+
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
+// Parse JSON bodies
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * RSS endpoint - generates RSS feed for notifications
  */
+app.get('/rss', async (req, res) => {
+  try {
+    const productsParam = req.query['products'] as string;
+    const productSlugs = productsParam ? productsParam.split(',').map((s) => s.trim()) : [];
+
+    // TODO: Replace with actual Firebase data fetching
+    // For now, returning mock RSS feed
+    const mockNotifications = [
+      {
+        title: 'Blanket Service Maintenance',
+        description:
+          'Scheduled maintenance will occur on the blanket service platform from 2:00 AM to 4:00 AM UTC.',
+        link: 'https://scopedalerts.example.com/notifications/blanket-service-maintenance',
+        pubDate: new Date('2024-11-07T02:00:00Z'),
+        guid: 'blanket-service-maintenance',
+      },
+      {
+        title: 'Portal Security Update',
+        description: 'A critical security update will be deployed to the portal system.',
+        link: 'https://scopedalerts.example.com/notifications/portal-security-update',
+        pubDate: new Date('2024-11-06T15:30:00Z'),
+        guid: 'portal-security-update',
+      },
+      {
+        title: 'EOLDs System Deprecation Notice',
+        description: 'The EOLDs system will be deprecated on December 31, 2024.',
+        link: 'https://scopedalerts.example.com/notifications/eolds-system-deprecation',
+        pubDate: new Date('2024-11-05T09:00:00Z'),
+        guid: 'eolds-system-deprecation',
+      },
+    ];
+
+    // Filter notifications based on products if specified
+    // TODO: Implement actual product filtering based on Firebase data
+
+    const rssXml = generateRSSFeed(mockNotifications, productSlugs);
+
+    res.set({
+      'Content-Type': 'application/rss+xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
+    });
+    res.send(rssXml);
+  } catch (error) {
+    console.error('Error generating RSS feed:', error);
+    res.status(500).json({ error: 'Failed to generate RSS feed' });
+  }
+});
+
+/**
+ * Generate RSS XML from notifications
+ */
+function generateRSSFeed(notifications: any[], productSlugs: string[] = []): string {
+  const baseUrl = 'https://scopedalerts.example.com'; // TODO: Make this configurable
+  const title =
+    productSlugs.length > 0
+      ? `ScopedAlerts - ${productSlugs.join(', ')} Notifications`
+      : 'ScopedAlerts - All Notifications';
+
+  const description =
+    productSlugs.length > 0
+      ? `Product notifications for ${productSlugs.join(', ')}`
+      : 'All product notifications and updates';
+
+  let rssItems = '';
+
+  notifications.forEach((notification) => {
+    rssItems += `
+    <item>
+      <title><![CDATA[${notification.title}]]></title>
+      <description><![CDATA[${notification.description}]]></description>
+      <link>${notification.link}</link>
+      <guid isPermaLink="false">${notification.guid}</guid>
+      <pubDate>${notification.pubDate.toUTCString()}</pubDate>
+    </item>`;
+  });
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title><![CDATA[${title}]]></title>
+    <description><![CDATA[${description}]]></description>
+    <link>${baseUrl}</link>
+    <atom:link href="${baseUrl}/rss${
+    productSlugs.length > 0 ? '?products=' + productSlugs.join(',') : ''
+  }" rel="self" type="application/rss+xml"/>
+    <language>en-us</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <generator>ScopedAlerts</generator>
+    <webMaster>stephen@fluin.io (Stephen Fluin)</webMaster>
+    <managingEditor>stephen@fluin.io (Stephen Fluin)</managingEditor>
+    <category>Technology</category>
+    <category>Notifications</category>
+    <ttl>60</ttl>${rssItems}
+  </channel>
+</rss>`;
+}
 
 /**
  * Serve static files from /browser
@@ -32,7 +143,7 @@ app.use(
     maxAge: '1y',
     index: false,
     redirect: false,
-  }),
+  })
 );
 
 /**
@@ -41,9 +152,7 @@ app.use(
 app.use((req, res, next) => {
   angularApp
     .handle(req)
-    .then((response) =>
-      response ? writeResponseToNodeResponse(response, res) : next(),
-    )
+    .then((response) => (response ? writeResponseToNodeResponse(response, res) : next()))
     .catch(next);
 });
 

@@ -1,1 +1,143 @@
 /* You can add global styles to this file, and also import other style files */
+
+// Angular Material theme - must come first
+@use '@angular/material' as mat;
+
+// Import Google Fonts
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@include mat.core();
+
+// Define the light theme
+$primary-palette: mat.m2-define-palette(mat.$m2-indigo-palette);
+$accent-palette: mat.m2-define-palette(mat.$m2-pink-palette, A200, A100, A400);
+$warn-palette: mat.m2-define-palette(mat.$m2-red-palette);
+
+$light-theme: mat.m2-define-light-theme(
+  (
+    color: (
+      primary: $primary-palette,
+      accent: $accent-palette,
+      warn: $warn-palette,
+    ),
+    typography:
+      mat.m2-define-typography-config(
+        $font-family: 'Inter, sans-serif',
+      ),
+    density: 0,
+  )
+);
+
+@include mat.all-component-themes($light-theme);
+
+// Import dark theme
+@import './app/styles/dark.scss';
+
+// Global styles
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #fafafa;
+  color: rgba(0, 0, 0, 0.87);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+// Loading spinner styles
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+}
+
+// Card styles
+.notification-card {
+  margin-bottom: 16px;
+
+  .mat-mdc-card-header {
+    padding-bottom: 8px;
+  }
+
+  .notification-meta {
+    font-size: 0.875rem;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .notification-preview {
+    margin-top: 8px;
+    opacity: 0.8;
+  }
+}
+
+// Button styles
+.fab-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+}
+
+// Form styles
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+
+  .mat-mdc-form-field {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+}
+
+// Filter styles
+.product-filter {
+  margin-bottom: 24px;
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .main-content {
+    padding: 8px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}

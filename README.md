@@ -1,59 +1,136 @@
-# Scopedalerts
+# ScopedAlerts
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.0-rc.1.
+A modern Angular application for managing and displaying product notifications with Firebase backend integration.
 
-## Development server
+## Features
 
-To start a local development server, run:
+- 🔔 **Notification Management**: Create, edit, and view product notifications
+- 📡 **RSS Feed**: Customizable RSS feeds for different product combinations
+- 🎯 **Product Filtering**: Filter notifications by specific products
 
-```bash
-ng serve
+## Technology Stack
+
+- **Frontend**: Angular 21+ with standalone components
+- **Backend**: Express.js with Firebase Realtime Database
+- **Authentication**: Firebase Auth with Google OAuth
+- **Styling**: Angular Material + Custom SCSS
+- **State Management**: Angular Signals
+- **Server**: Node.js with Angular SSR
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Firebase project with Realtime Database and Authentication enabled
+- Google OAuth credentials
+
+### Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/StephenFluin/scopedalerts.git
+   cd scopedalerts
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Configure Firebase**
+
+   - Update `src/app/config/firebase.config.ts` with your Firebase configuration
+   - Deploy the database rules from `database.rules.json` to your Firebase project
+   - Enable Google authentication in Firebase Console
+
+### Development
+
+1. **Start the development server**
+
+   ```bash
+   npm start
+   ```
+
+2. **View the application**
+   Open [http://localhost:4200](http://localhost:4200) in your browser
+
+### Building for Production
+
+1. **Build the application**
+
+   ```bash
+   npm run build
+   ```
+
+## API Endpoints
+
+### RSS Feed
+
+- **GET** `/rss` - Get RSS feed for all notifications
+- **GET** `/rss?products=product1,product2` - Get filtered RSS feed
+
+## Firebase Database Structure
+
+```
+{
+  "products": {
+    "product-id": {
+      "name": "Product Name",
+      "description": "Product description",
+      "slug": "product-slug"
+    }
+  },
+  "notices": {
+    "notice-id": {
+      "title": "Notification Title",
+      "description": "Detailed description",
+      "datetime": "2024-11-07T02:00:00.000Z",
+      "slug": "notification-slug",
+      "affectedProducts": ["product-id-1", "product-id-2"]
+    }
+  },
+  "admins": {
+    "user-uid": {
+      "email": "admin@example.com",
+      "displayName": "Admin Name"
+    }
+  }
+}
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Configuration
 
-## Code scaffolding
+### Firebase Setup
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+1. Create a Firebase project
+2. Enable Realtime Database
+3. Enable Authentication with Google provider
+4. Update `src/app/config/firebase.config.ts` with your project credentials
+5. Deploy the database rules from `database.rules.json`
 
-```bash
-ng generate component component-name
-```
+### Environment Variables
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+- `PORT` - Server port (default: 4000)
 
-```bash
-ng generate --help
-```
+## Contributing
 
-## Building
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-To build the project run:
+## License
 
-```bash
-ng build
-```
+This project is open source and available under the [MIT License](LICENSE).
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Author
 
-## Running unit tests
+Created by [Stephen Fluin](https://github.com/StephenFluin)
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+---
 
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+For more information about Angular development, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
