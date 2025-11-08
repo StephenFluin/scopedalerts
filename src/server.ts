@@ -43,8 +43,52 @@ app.get('/rss', async (req, res) => {
     const productsParam = req.query['products'] as string;
     const productSlugs = productsParam ? productsParam.split(',').map((s) => s.trim()) : [];
 
-    // TODO: Replace with actual Firebase data fetching
-    // For now, returning mock RSS feed
+    // TODO: Replace with Firebase data fetching when packages are installed
+    /*
+    let notifications = [];
+    
+    if (typeof window === 'undefined') {
+      // Server-side Firebase initialization
+      try {
+        const { initializeApp } = await import('firebase/app');
+        const { getDatabase, ref, get, query, orderByChild } = await import('firebase/database');
+        
+        const firebaseConfig = {
+          // Firebase config would go here
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const noticesRef = ref(database, 'notices');
+        const snapshot = await get(query(noticesRef, orderByChild('datetime')));
+        
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          notifications = Object.keys(data).map(key => ({
+            id: key,
+            ...data[key]
+          })).filter(notification => {
+            if (productSlugs.length === 0) return true;
+            return notification.affectedProducts.some((product: string) => 
+              productSlugs.includes(product)
+            );
+          }).map(notification => ({
+            title: notification.title,
+            description: notification.description,
+            link: `https://scopedalerts.example.com/notifications/${notification.slug}`,
+            pubDate: new Date(notification.datetime),
+            guid: notification.slug,
+          }));
+        }
+      } catch (error) {
+        console.warn('Firebase not available, using mock data:', error);
+      }
+    }
+    
+    if (notifications.length === 0) {
+    */
+
+    // Mock notifications for development
     const mockNotifications = [
       {
         title: 'Blanket Service Maintenance',
@@ -53,6 +97,7 @@ app.get('/rss', async (req, res) => {
         link: 'https://scopedalerts.example.com/notifications/blanket-service-maintenance',
         pubDate: new Date('2024-11-07T02:00:00Z'),
         guid: 'blanket-service-maintenance',
+        affectedProducts: ['blanket-eol'],
       },
       {
         title: 'Portal Security Update',
@@ -60,6 +105,7 @@ app.get('/rss', async (req, res) => {
         link: 'https://scopedalerts.example.com/notifications/portal-security-update',
         pubDate: new Date('2024-11-06T15:30:00Z'),
         guid: 'portal-security-update',
+        affectedProducts: ['portal'],
       },
       {
         title: 'EOLDs System Deprecation Notice',
@@ -67,13 +113,32 @@ app.get('/rss', async (req, res) => {
         link: 'https://scopedalerts.example.com/notifications/eolds-system-deprecation',
         pubDate: new Date('2024-11-05T09:00:00Z'),
         guid: 'eolds-system-deprecation',
+        affectedProducts: ['eolds'],
       },
     ];
 
     // Filter notifications based on products if specified
-    // TODO: Implement actual product filtering based on Firebase data
+    let filteredNotifications = mockNotifications;
 
-    const rssXml = generateRSSFeed(mockNotifications, productSlugs);
+    if (productSlugs.length > 0) {
+      filteredNotifications = mockNotifications.filter((notification) =>
+        notification.affectedProducts.some((product) => productSlugs.includes(product))
+      );
+    }
+
+    // TODO: When Firebase is integrated, use the notifications variable instead
+    /*
+    }
+    
+    let filteredNotifications = notifications;
+    if (productSlugs.length > 0) {
+      filteredNotifications = notifications.filter(notification =>
+        notification.affectedProducts.some(product => productSlugs.includes(product))
+      );
+    }
+    */
+
+    const rssXml = generateRSSFeed(filteredNotifications, productSlugs);
 
     res.set({
       'Content-Type': 'application/rss+xml; charset=utf-8',

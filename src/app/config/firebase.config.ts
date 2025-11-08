@@ -1,10 +1,9 @@
 export const firebaseConfig = {
-  // Replace with your Firebase configuration
-  apiKey: 'your-api-key',
-  authDomain: 'your-project.firebaseapp.com',
-  databaseURL: 'https://your-project-default-rtdb.firebaseio.com',
-  projectId: 'your-project',
-  storageBucket: 'your-project.appspot.com',
-  messagingSenderId: '123456789',
-  appId: 'your-app-id',
+  apiKey: 'AIzaSyCCl1peQsBKJWImaYkh7V4Zgb6BE7KI6ZA',
+  authDomain: 'scopedalerts.firebaseapp.com',
+  databaseURL: 'https://scopedalerts-default-rtdb.firebaseio.com',
+  projectId: 'scopedalerts',
+  storageBucket: 'scopedalerts.firebasestorage.app',
+  messagingSenderId: '904617747111',
+  appId: '1:904617747111:web:e8c61dd68b9da1cb55b182',
 };

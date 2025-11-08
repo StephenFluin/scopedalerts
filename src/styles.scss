@@ -2,6 +2,7 @@
 
 // Angular Material theme - must come first
 @use '@angular/material' as mat;
+@use './app/styles/dark.scss';
 
 // Import Google Fonts
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -29,9 +30,6 @@ $light-theme: mat.m2-define-light-theme(
 );
 
 @include mat.all-component-themes($light-theme);
-
-// Import dark theme
-@import './app/styles/dark.scss';
 
 // Global styles
 * {
