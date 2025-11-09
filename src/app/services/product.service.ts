@@ -22,21 +22,14 @@ export class ProductService {
 
   private async initializeFirebase(): Promise<void> {
     try {
-      // TODO: Initialize Firebase when packages are installed
-      /*
       if (isPlatformBrowser(this.platformId)) {
         const { initializeApp } = await import('firebase/app');
         const { getDatabase } = await import('firebase/database');
-        
-        const firebaseConfig = {
-          // Config will be added when Firebase is set up
-        };
-        
+        const { firebaseConfig } = await import('../config/firebase.config');
+
         const app = initializeApp(firebaseConfig);
         this.firebaseDatabase = getDatabase(app);
       }
-      */
-      console.log('Firebase Database initialization would happen here');
     } catch (error) {
       console.warn('Firebase Database not available, using mock data:', error);
     }
@@ -45,46 +38,42 @@ export class ProductService {
   async loadProducts(): Promise<Product[]> {
     this.isLoading.set(true);
     try {
-      // TODO: Replace with Firebase query when installed
-      /*
       if (this.firebaseDatabase) {
         const { ref, get } = await import('firebase/database');
         const productsRef = ref(this.firebaseDatabase, 'products');
         const snapshot = await get(productsRef);
-        
+
         if (snapshot.exists()) {
           const data = snapshot.val();
-          const products = Object.keys(data).map(key => ({
+          const products = Object.keys(data).map((key) => ({
             id: key,
-            ...data[key]
+            ...data[key],
           }));
           this.products.set(products);
           return products;
         }
       }
-      */
 
       const mockProducts = this.getMockProducts();
       this.products.set(mockProducts);
       return mockProducts;
     } catch (error) {
       console.error('Error loading products:', error);
-      return [];
+      const mockProducts = this.getMockProducts();
+      this.products.set(mockProducts);
+      return mockProducts;
     } finally {
       this.isLoading.set(false);
     }
   }
-
   async getProductBySlug(slug: string): Promise<Product | null> {
     try {
-      // TODO: Replace with Firebase query when installed
-      /*
       if (this.firebaseDatabase) {
         const { ref, query, orderByChild, equalTo, get } = await import('firebase/database');
         const productsRef = ref(this.firebaseDatabase, 'products');
         const queryRef = query(productsRef, orderByChild('slug'), equalTo(slug));
         const snapshot = await get(queryRef);
-        
+
         if (snapshot.exists()) {
           const data = snapshot.val();
           const key = Object.keys(data)[0];
@@ -92,7 +81,6 @@ export class ProductService {
         }
         return null;
       }
-      */
 
       const products = this.products();
       return products.find((p) => p.slug === slug) || null;
@@ -109,15 +97,16 @@ export class ProductService {
 
   async createProduct(product: Omit<Product, 'id'>): Promise<Product> {
     try {
-      // TODO: Replace with Firebase operation when packages are installed
-      /*
       if (this.firebaseDatabase) {
         const { ref, push } = await import('firebase/database');
         const productsRef = ref(this.firebaseDatabase, 'products');
         const result = await push(productsRef, product);
-        return { id: result.key!, ...product };
+        const newProduct = { id: result.key!, ...product };
+
+        // Update local state
+        this.products.update((products) => [...products, newProduct]);
+        return newProduct;
       }
-      */
 
       const newProduct: Product = {
         ...product,
@@ -134,22 +123,32 @@ export class ProductService {
 
   async updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
     try {
-      // TODO: Replace with Firebase operation when packages are installed
-      /*
       if (this.firebaseDatabase) {
         const { ref, update, get } = await import('firebase/database');
         const productRef = ref(this.firebaseDatabase, `products/${id}`);
         const snapshot = await get(productRef);
-        
+
         if (!snapshot.exists()) {
           throw new Error('Product not found');
         }
-        
+
         await update(productRef, updates);
         const updatedSnapshot = await get(productRef);
-        return { id, ...updatedSnapshot.val() };
+        const updatedProduct = { id, ...updatedSnapshot.val() };
+
+        // Update local state
+        this.products.update((products) => {
+          const index = products.findIndex((p) => p.id === id);
+          if (index !== -1) {
+            const newProducts = [...products];
+            newProducts[index] = updatedProduct;
+            return newProducts;
+          }
+          return products;
+        });
+
+        return updatedProduct;
       }
-      */
 
       const products = this.products();
       const index = products.findIndex((p) => p.id === id);
@@ -178,20 +177,15 @@ export class ProductService {
 
   async deleteProduct(id: string): Promise<boolean> {
     try {
-      // TODO: Replace with Firebase operation when packages are installed
-      /*
       if (this.firebaseDatabase) {
         const { ref, remove } = await import('firebase/database');
         const productRef = ref(this.firebaseDatabase, `products/${id}`);
         await remove(productRef);
-        
+
         // Update local state
-        this.products.update((products) =>
-          products.filter((p) => p.id !== id)
-        );
+        this.products.update((products) => products.filter((p) => p.id !== id));
         return true;
       }
-      */
 
       this.products.update((products) => products.filter((p) => p.id !== id));
       return true;
@@ -200,7 +194,6 @@ export class ProductService {
       return false;
     }
   }
-
   private getMockProducts(): Product[] {
     return [
       {

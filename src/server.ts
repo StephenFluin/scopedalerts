@@ -6,6 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+const { firebaseConfig } = await import('./app/config/firebase.config');
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -43,100 +44,90 @@ app.get('/rss', async (req, res) => {
     const productsParam = req.query['products'] as string;
     const productSlugs = productsParam ? productsParam.split(',').map((s) => s.trim()) : [];
 
-    // TODO: Replace with Firebase data fetching when packages are installed
-    /*
-    let notifications = [];
-    
+    // Firebase data fetching
+    let notifications: any[] = [];
+
     if (typeof window === 'undefined') {
       // Server-side Firebase initialization
       try {
         const { initializeApp } = await import('firebase/app');
         const { getDatabase, ref, get, query, orderByChild } = await import('firebase/database');
-        
-        const firebaseConfig = {
-          // Firebase config would go here
-        };
-        
+
+        // import firebaseConfig
+
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
         const noticesRef = ref(database, 'notices');
         const snapshot = await get(query(noticesRef, orderByChild('datetime')));
-        
+
         if (snapshot.exists()) {
           const data = snapshot.val();
-          notifications = Object.keys(data).map(key => ({
-            id: key,
-            ...data[key]
-          })).filter(notification => {
-            if (productSlugs.length === 0) return true;
-            return notification.affectedProducts.some((product: string) => 
-              productSlugs.includes(product)
-            );
-          }).map(notification => ({
-            title: notification.title,
-            description: notification.description,
-            link: `https://scopedalerts.example.com/notifications/${notification.slug}`,
-            pubDate: new Date(notification.datetime),
-            guid: notification.slug,
-          }));
+          notifications = Object.keys(data)
+            .map((key) => ({
+              id: key,
+              ...data[key],
+            }))
+            .filter((notification) => {
+              if (productSlugs.length === 0) return true;
+              return notification.affectedProducts.some((product: string) =>
+                productSlugs.includes(product)
+              );
+            })
+            .map((notification) => ({
+              title: notification.title,
+              description: notification.description,
+              link: `https://scopedalerts.example.com/notifications/${notification.slug}`,
+              pubDate: new Date(notification.datetime),
+              guid: notification.slug,
+            }));
         }
       } catch (error) {
         console.warn('Firebase not available, using mock data:', error);
       }
     }
-    
-    if (notifications.length === 0) {
-    */
 
-    // Mock notifications for development
-    const mockNotifications = [
-      {
-        title: 'Blanket Service Maintenance',
-        description:
-          'Scheduled maintenance will occur on the blanket service platform from 2:00 AM to 4:00 AM UTC.',
-        link: 'https://scopedalerts.example.com/notifications/blanket-service-maintenance',
-        pubDate: new Date('2024-11-07T02:00:00Z'),
-        guid: 'blanket-service-maintenance',
-        affectedProducts: ['blanket-eol'],
-      },
-      {
-        title: 'Portal Security Update',
-        description: 'A critical security update will be deployed to the portal system.',
-        link: 'https://scopedalerts.example.com/notifications/portal-security-update',
-        pubDate: new Date('2024-11-06T15:30:00Z'),
-        guid: 'portal-security-update',
-        affectedProducts: ['portal'],
-      },
-      {
-        title: 'EOLDs System Deprecation Notice',
-        description: 'The EOLDs system will be deprecated on December 31, 2024.',
-        link: 'https://scopedalerts.example.com/notifications/eolds-system-deprecation',
-        pubDate: new Date('2024-11-05T09:00:00Z'),
-        guid: 'eolds-system-deprecation',
-        affectedProducts: ['eolds'],
-      },
-    ];
+    if (notifications.length === 0) {
+      // Mock notifications for development (fallback when Firebase is unavailable)
+      const mockNotifications = [
+        {
+          title: 'Blanket Service Maintenance',
+          description:
+            'Scheduled maintenance will occur on the blanket service platform from 2:00 AM to 4:00 AM UTC.',
+          link: 'https://scopedalerts.example.com/notifications/blanket-service-maintenance',
+          pubDate: new Date('2024-11-07T02:00:00Z'),
+          guid: 'blanket-service-maintenance',
+          affectedProducts: ['blanket-eol'],
+        },
+        {
+          title: 'Portal Security Update',
+          description: 'A critical security update will be deployed to the portal system.',
+          link: 'https://scopedalerts.example.com/notifications/portal-security-update',
+          pubDate: new Date('2024-11-06T15:30:00Z'),
+          guid: 'portal-security-update',
+          affectedProducts: ['portal'],
+        },
+        {
+          title: 'EOLDs System Deprecation Notice',
+          description: 'The EOLDs system will be deprecated on December 31, 2024.',
+          link: 'https://scopedalerts.example.com/notifications/eolds-system-deprecation',
+          pubDate: new Date('2024-11-05T09:00:00Z'),
+          guid: 'eolds-system-deprecation',
+          affectedProducts: ['eolds'],
+        },
+      ];
+
+      // Use Firebase data if available, otherwise fall back to mock
+      notifications = notifications.length > 0 ? notifications : mockNotifications;
+    }
 
     // Filter notifications based on products if specified
-    let filteredNotifications = mockNotifications;
-
-    if (productSlugs.length > 0) {
-      filteredNotifications = mockNotifications.filter((notification) =>
-        notification.affectedProducts.some((product) => productSlugs.includes(product))
-      );
-    }
-
-    // TODO: When Firebase is integrated, use the notifications variable instead
-    /*
-    }
-    
     let filteredNotifications = notifications;
+
     if (productSlugs.length > 0) {
-      filteredNotifications = notifications.filter(notification =>
-        notification.affectedProducts.some(product => productSlugs.includes(product))
+      filteredNotifications = notifications.filter((notification: any) =>
+        notification.affectedProducts.some((product: string) => productSlugs.includes(product))
       );
     }
-    */
 
     const rssXml = generateRSSFeed(filteredNotifications, productSlugs);
 

@@ -22,21 +22,14 @@ export class AdminService {
 
   private async initializeFirebase(): Promise<void> {
     try {
-      // TODO: Initialize Firebase when packages are installed
-      /*
       if (isPlatformBrowser(this.platformId)) {
         const { initializeApp } = await import('firebase/app');
         const { getDatabase } = await import('firebase/database');
-        
-        const firebaseConfig = {
-          // Config will be added when Firebase is set up
-        };
-        
+        const { firebaseConfig } = await import('../config/firebase.config');
+
         const app = initializeApp(firebaseConfig);
         this.firebaseDatabase = getDatabase(app);
       }
-      */
-      console.log('Firebase Database initialization would happen here');
     } catch (error) {
       console.warn('Firebase Database not available, using mock data:', error);
     }
@@ -45,31 +38,30 @@ export class AdminService {
   async loadAdmins(): Promise<Admin[]> {
     this.isLoading.set(true);
     try {
-      // TODO: Replace with Firebase query when installed
-      /*
       if (this.firebaseDatabase) {
         const { ref, get } = await import('firebase/database');
         const adminsRef = ref(this.firebaseDatabase, 'admins');
         const snapshot = await get(adminsRef);
-        
+
         if (snapshot.exists()) {
           const data = snapshot.val();
-          const admins = Object.keys(data).map(key => ({
+          const admins = Object.keys(data).map((key) => ({
             uid: key,
-            ...data[key]
+            ...data[key],
           }));
           this.admins.set(admins);
           return admins;
         }
       }
-      */
 
       const mockAdmins = this.getMockAdmins();
       this.admins.set(mockAdmins);
       return mockAdmins;
     } catch (error) {
       console.error('Error loading admins:', error);
-      return [];
+      const mockAdmins = this.getMockAdmins();
+      this.admins.set(mockAdmins);
+      return mockAdmins;
     } finally {
       this.isLoading.set(false);
     }
@@ -77,20 +69,17 @@ export class AdminService {
 
   async addAdmin(admin: Omit<Admin, 'uid'>): Promise<void> {
     try {
-      // TODO: Replace with Firebase operation when packages are installed
-      /*
       if (this.firebaseDatabase) {
         const { ref, set } = await import('firebase/database');
         const newUid = `uid-${Date.now()}`;
         const adminRef = ref(this.firebaseDatabase, `admins/${newUid}`);
         await set(adminRef, admin);
-        
+
         // Update local state
         const newAdmin: Admin = { ...admin, uid: newUid };
         this.admins.update((admins) => [...admins, newAdmin]);
         return;
       }
-      */
 
       const newAdmin: Admin = { ...admin, uid: `uid-${Date.now()}` };
       this.admins.update((admins) => [...admins, newAdmin]);
@@ -102,18 +91,15 @@ export class AdminService {
 
   async removeAdmin(uid: string): Promise<void> {
     try {
-      // TODO: Replace with Firebase operation when packages are installed
-      /*
       if (this.firebaseDatabase) {
         const { ref, remove } = await import('firebase/database');
         const adminRef = ref(this.firebaseDatabase, `admins/${uid}`);
         await remove(adminRef);
-        
+
         // Update local state
         this.admins.update((admins) => admins.filter((a) => a.uid !== uid));
         return;
       }
-      */
 
       this.admins.update((admins) => admins.filter((a) => a.uid !== uid));
     } catch (error) {

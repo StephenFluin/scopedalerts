@@ -1,0 +1,151 @@
+<div class="admin-container">
+  @if (!userService.isAdmin()) {
+  <div class="error-container">
+    <h1>Access Denied</h1>
+    <p>You don't have permission to access the admin panel. Admin access is required.</p>
+    <a routerLink="/" class="back-btn">← Back to Notifications</a>
+  </div>
+  } @else {
+  <div class="admin-header">
+    <div class="breadcrumb">
+      <a routerLink="/" class="breadcrumb-link">← Back to Notifications</a>
+    </div>
+
+    <h1>Admin Panel</h1>
+    <p class="admin-description">
+      Manage administrators and access notification management features.
+    </p>
+  </div>
+
+  <div class="admin-content">
+    <div class="quick-actions-section">
+      <h2>Quick Actions</h2>
+      <div class="quick-actions">
+        <a routerLink="/notifications/new/edit" class="action-card">
+          <div class="action-icon">📝</div>
+          <h3>Create Notification</h3>
+          <p>Add a new notification for users</p>
+        </a>
+
+        <a routerLink="/" class="action-card">
+          <div class="action-icon">📋</div>
+          <h3>Manage Notifications</h3>
+          <p>View and edit existing notifications</p>
+        </a>
+      </div>
+    </div>
+
+    <div class="admins-section">
+      <h2>Administrator Management</h2>
+
+      <div class="add-admin-form">
+        <h3>Add New Administrator</h3>
+        <form [formGroup]="adminForm" (ngSubmit)="addAdmin()" class="admin-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label for="email">Email Address *</label>
+              <input
+                type="email"
+                id="email"
+                formControlName="email"
+                class="form-input"
+                placeholder="admin@example.com"
+              />
+              @if (adminForm.get('email')?.invalid && adminForm.get('email')?.touched) {
+              <div class="error-message">
+                @if (adminForm.get('email')?.errors?.['required']) { Email is required } @if
+                (adminForm.get('email')?.errors?.['email']) { Please enter a valid email address }
+              </div>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="displayName">Display Name *</label>
+              <input
+                type="text"
+                id="displayName"
+                formControlName="displayName"
+                class="form-input"
+                placeholder="John Doe"
+              />
+              @if (adminForm.get('displayName')?.invalid && adminForm.get('displayName')?.touched) {
+              <div class="error-message">Display name is required</div>
+              }
+            </div>
+
+            <button type="submit" class="add-btn" [disabled]="adminForm.invalid || isAdding()">
+              @if (isAdding()) { Adding... } @else { Add Admin }
+            </button>
+          </div>
+        </form>
+
+        <div class="add-admin-note">
+          <p>
+            <strong>Note:</strong> The new administrator will need to sign in with their Google
+            account to access admin features.
+          </p>
+        </div>
+      </div>
+
+      @if (adminService.loading()) {
+      <div class="loading-container">
+        <div class="loading-spinner">Loading administrators...</div>
+      </div>
+      } @else {
+      <div class="admins-list">
+        <h3>Current Administrators ({{ adminService.allAdmins().length }})</h3>
+
+        @if (adminService.allAdmins().length === 0) {
+        <div class="empty-state">
+          <p>No administrators found.</p>
+        </div>
+        } @else {
+        <div class="admins-grid">
+          @for (admin of adminService.allAdmins(); track admin.uid) {
+          <div class="admin-card">
+            <div class="admin-info">
+              <h4>{{ admin.displayName }}</h4>
+              <p class="admin-email">{{ admin.email }}</p>
+              <span class="admin-id">ID: {{ admin.uid }}</span>
+            </div>
+
+            <div class="admin-actions">
+              @if (canRemoveAdmin(admin)) {
+              <button
+                type="button"
+                (click)="confirmRemoveAdmin(admin)"
+                class="remove-btn"
+                [disabled]="isRemoving()"
+              >
+                Remove
+              </button>
+              } @else {
+              <span class="current-user-badge">You</span>
+              }
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+
+  @if (showRemoveConfirm()) {
+  <div class="remove-modal-overlay" (click)="cancelRemoveAdmin()">
+    <div class="remove-modal" (click)="$event.stopPropagation()">
+      <h3>Confirm Removal</h3>
+      <p>
+        Are you sure you want to remove <strong>{{ adminToRemove()?.displayName }}</strong>
+        from the administrators list?
+      </p>
+      <p class="warning-text">They will lose access to all admin features immediately.</p>
+      <div class="modal-actions">
+        <button type="button" (click)="cancelRemoveAdmin()" class="cancel-btn">Cancel</button>
+        <button type="button" (click)="removeAdmin()" class="remove-btn">Remove Admin</button>
+      </div>
+    </div>
+  </div>
+  } }
+</div>

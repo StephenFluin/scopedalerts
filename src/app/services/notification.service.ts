@@ -25,8 +25,14 @@ export class NotificationService {
 
   private async initializeFirebase(): Promise<void> {
     try {
-      // TODO: Initialize Firebase when packages are installed
-      console.log('Firebase Database initialization would happen here');
+      if (isPlatformBrowser(this.platformId)) {
+        const { initializeApp } = await import('firebase/app');
+        const { getDatabase } = await import('firebase/database');
+        const { firebaseConfig } = await import('../config/firebase.config');
+
+        const app = initializeApp(firebaseConfig);
+        this.firebaseDatabase = getDatabase(app);
+      }
     } catch (error) {
       console.warn('Firebase Database not available, using mock data:', error);
     }
@@ -35,32 +41,37 @@ export class NotificationService {
   async loadNotifications(limit = 20, startAfter?: string): Promise<Notice[]> {
     this.isLoading.set(true);
     try {
-      // TODO: Replace with Firebase query when installed
-      /*
       if (this.firebaseDatabase) {
+        const { ref, get, query, orderByChild, limitToLast } = await import('firebase/database');
         const noticesRef = ref(this.firebaseDatabase, 'notices');
-        const query = orderByChild('datetime');
-        const snapshot = await get(child(noticesRef, query));
-        
+        const noticesQuery = query(noticesRef, orderByChild('datetime'), limitToLast(limit));
+        const snapshot = await get(noticesQuery);
+
         if (snapshot.exists()) {
           const data = snapshot.val();
-          const notifications = Object.keys(data).map(key => ({
-            id: key,
-            ...data[key]
-          }));
+          const notifications = Object.keys(data)
+            .map((key) => ({
+              id: key,
+              ...data[key],
+              createdAt: new Date(data[key].createdAt),
+              updatedAt: new Date(data[key].updatedAt),
+            }))
+            .sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime());
+
           this.notifications.set(notifications);
           return notifications;
         }
       }
-      */
 
-      // For now, return mock data
+      // Fallback to mock data
       const mockNotifications = this.getMockNotifications();
       this.notifications.set(mockNotifications);
       return mockNotifications;
     } catch (error) {
       console.error('Error loading notifications:', error);
-      return [];
+      const mockNotifications = this.getMockNotifications();
+      this.notifications.set(mockNotifications);
+      return mockNotifications;
     } finally {
       this.isLoading.set(false);
     }
@@ -68,21 +79,24 @@ export class NotificationService {
 
   async getNotificationBySlug(slug: string): Promise<Notice | null> {
     try {
-      // TODO: Replace with Firebase query when installed
-      /*
       if (this.firebaseDatabase) {
+        const { ref, get, query, orderByChild, equalTo } = await import('firebase/database');
         const noticesRef = ref(this.firebaseDatabase, 'notices');
         const queryRef = query(noticesRef, orderByChild('slug'), equalTo(slug));
         const snapshot = await get(queryRef);
-        
+
         if (snapshot.exists()) {
           const data = snapshot.val();
           const key = Object.keys(data)[0];
-          return { id: key, ...data[key] };
+          return {
+            id: key,
+            ...data[key],
+            createdAt: new Date(data[key].createdAt),
+            updatedAt: new Date(data[key].updatedAt),
+          };
         }
         return null;
       }
-      */
 
       const notifications = this.notifications();
       return notifications.find((n) => n.slug === slug) || null;
@@ -96,9 +110,8 @@ export class NotificationService {
     notice: Omit<Notice, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<Notice> {
     try {
-      // TODO: Replace with Firebase operation when packages are installed
-      /*
       if (this.firebaseDatabase) {
+        const { ref, push, serverTimestamp } = await import('firebase/database');
         const noticesRef = ref(this.firebaseDatabase, 'notices');
         const newNotice = {
           ...notice,
@@ -106,9 +119,17 @@ export class NotificationService {
           updatedAt: serverTimestamp(),
         };
         const result = await push(noticesRef, newNotice);
-        return { id: result.key!, ...newNotice, createdAt: new Date(), updatedAt: new Date() };
+        const createdNotice = {
+          id: result.key!,
+          ...notice,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        // Update local state
+        this.notifications.update((notifications) => [...notifications, createdNotice]);
+        return createdNotice;
       }
-      */
 
       const newNotice: Notice = {
         ...notice,
@@ -127,26 +148,42 @@ export class NotificationService {
 
   async updateNotification(id: string, updates: Partial<Notice>): Promise<Notice | null> {
     try {
-      // TODO: Replace with Firebase operation when packages are installed
-      /*
       if (this.firebaseDatabase) {
+        const { ref, get, update, serverTimestamp } = await import('firebase/database');
         const noticeRef = ref(this.firebaseDatabase, `notices/${id}`);
         const snapshot = await get(noticeRef);
-        
+
         if (!snapshot.exists()) {
           throw new Error('Notification not found');
         }
-        
+
         const updatedData = {
           ...updates,
           updatedAt: serverTimestamp(),
         };
-        
+
         await update(noticeRef, updatedData);
         const updatedSnapshot = await get(noticeRef);
-        return { id, ...updatedSnapshot.val() };
+        const updatedNotice = {
+          id,
+          ...updatedSnapshot.val(),
+          createdAt: new Date(updatedSnapshot.val().createdAt),
+          updatedAt: new Date(),
+        };
+
+        // Update local state
+        this.notifications.update((notifications) => {
+          const index = notifications.findIndex((n) => n.id === id);
+          if (index !== -1) {
+            const newNotifications = [...notifications];
+            newNotifications[index] = updatedNotice;
+            return newNotifications;
+          }
+          return notifications;
+        });
+
+        return updatedNotice;
       }
-      */
 
       const notifications = this.notifications();
       const index = notifications.findIndex((n) => n.id === id);
@@ -176,19 +213,15 @@ export class NotificationService {
 
   async deleteNotification(id: string): Promise<boolean> {
     try {
-      // TODO: Replace with Firebase operation when packages are installed
-      /*
       if (this.firebaseDatabase) {
+        const { ref, remove } = await import('firebase/database');
         const noticeRef = ref(this.firebaseDatabase, `notices/${id}`);
         await remove(noticeRef);
-        
+
         // Update local state
-        this.notifications.update((notifications) =>
-          notifications.filter((n) => n.id !== id)
-        );
+        this.notifications.update((notifications) => notifications.filter((n) => n.id !== id));
         return true;
       }
-      */
 
       this.notifications.update((notifications) => notifications.filter((n) => n.id !== id));
       return true;

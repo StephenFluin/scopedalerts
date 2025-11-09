@@ -34,11 +34,32 @@ export class UserService {
 
   private async initializeFirebase(): Promise<void> {
     try {
-      // For now, use mock authentication until Firebase is properly installed
-      console.log('Firebase initialization would happen here when firebase packages are installed');
+      if (this.isBrowser) {
+        const { initializeApp } = await import('firebase/app');
+        const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } =
+          await import('firebase/auth');
+        const { getDatabase, ref, get } = await import('firebase/database');
+        const { firebaseConfig } = await import('../config/firebase.config');
 
-      // Initialize with mock admin user for testing
-      this.setMockUser('admin');
+        const app = initializeApp(firebaseConfig);
+        this.firebaseAuth = getAuth(app);
+        this.firebaseDatabase = getDatabase(app);
+
+        // Listen for auth state changes
+        onAuthStateChanged(this.firebaseAuth, async (firebaseUser) => {
+          if (firebaseUser) {
+            const role = await this.checkUserRole(firebaseUser.uid);
+            this.currentUser.set({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              displayName: firebaseUser.displayName || '',
+              role,
+            });
+          } else {
+            this.currentUser.set(null);
+          }
+        });
+      }
     } catch (error) {
       console.warn('Firebase not available, using mock data:', error);
       this.setMockUser('admin');
@@ -48,15 +69,21 @@ export class UserService {
   async signInWithGoogle(): Promise<void> {
     this.isLoading.set(true);
     try {
-      // TODO: Replace with actual Firebase Google sign-in when Firebase is installed
-      // Mock sign-in for development
-      console.log('Mock Google sign-in');
-      this.currentUser.set({
-        uid: 'mock-admin-uid',
-        email: 'admin@example.com',
-        displayName: 'Mock Admin User',
-        role: 'admin',
-      });
+      if (this.firebaseAuth) {
+        const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(this.firebaseAuth, provider);
+        // User state will be updated via onAuthStateChanged listener
+      } else {
+        // Fallback to mock sign-in for development
+        console.log('Mock Google sign-in');
+        this.currentUser.set({
+          uid: 'mock-admin-uid',
+          email: 'admin@example.com',
+          displayName: 'Mock Admin User',
+          role: 'admin',
+        });
+      }
     } catch (error) {
       console.error('Sign in failed:', error);
       throw error;
@@ -68,9 +95,15 @@ export class UserService {
   async signOut(): Promise<void> {
     this.isLoading.set(true);
     try {
-      // TODO: Replace with actual Firebase sign-out when Firebase is installed
-      this.currentUser.set(null);
-      console.log('Mock sign-out');
+      if (this.firebaseAuth) {
+        const { signOut } = await import('firebase/auth');
+        await signOut(this.firebaseAuth);
+        // User state will be updated via onAuthStateChanged listener
+      } else {
+        // Fallback to mock sign-out for development
+        this.currentUser.set(null);
+        console.log('Mock sign-out');
+      }
     } catch (error) {
       console.error('Sign out failed:', error);
       throw error;
@@ -81,9 +114,15 @@ export class UserService {
 
   private async checkUserRole(uid: string): Promise<UserRole> {
     try {
-      // TODO: Replace with actual Firebase database check when Firebase is installed
-      // For now, return admin for testing purposes
-      return uid.includes('admin') ? 'admin' : 'user';
+      if (this.firebaseDatabase) {
+        const { ref, get } = await import('firebase/database');
+        const adminRef = ref(this.firebaseDatabase, `admins/${uid}`);
+        const snapshot = await get(adminRef);
+        return snapshot.exists() ? 'admin' : 'user';
+      } else {
+        // Fallback to mock role checking for development
+        return uid.includes('admin') ? 'admin' : 'user';
+      }
     } catch (error) {
       console.error('Error checking user role:', error);
       return 'user';
