@@ -73,11 +73,14 @@ export class ThemeService {
     }
 
     const body = this.document.body;
+    const html = this.document.documentElement;
 
-    // Simple .dark class management
+    // Apply .dark class to both html and body elements
     if (this.isDarkMode()) {
+      this.renderer.addClass(html, 'dark');
       this.renderer.addClass(body, 'dark');
     } else {
+      this.renderer.removeClass(html, 'dark');
       this.renderer.removeClass(body, 'dark');
     }
   }

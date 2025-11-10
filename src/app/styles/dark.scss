@@ -1,10 +1,18 @@
 /* Dark theme styles - Simple CSS class based approach */
 
+html.dark {
+  background-color: #121212;
+  min-height: 100vh;
+}
+
+html.dark,
 body.dark {
   transition: none;
-
   background-color: #121212;
   color: rgba(255, 255, 255, 0.87);
+}
+
+body.dark {
 
   .notification-card {
     background-color: #1e1e1e;

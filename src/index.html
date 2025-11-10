@@ -61,6 +61,7 @@
         function applyTheme() {
           if (document.body) {
             if (shouldBeDark) {
+              document.documentElement.classList.add('dark');
               document.body.classList.add('dark');
             }
           } else {
