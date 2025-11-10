@@ -19,6 +19,59 @@
       rel="stylesheet"
     />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <style>
+      /* Critical CSS to prevent theme flash */
+      body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background-color: #fafafa;
+        color: rgba(0, 0, 0, 0.87);
+      }
+
+      /* Dark theme styles */
+      body.dark {
+        background-color: #121212;
+        color: rgba(255, 255, 255, 0.87);
+      }
+
+      /* Fallback for SSR/no-JS */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #121212;
+          color: rgba(255, 255, 255, 0.87);
+        }
+      }
+    </style>
+    <script>
+      // Apply theme immediately
+      (function () {
+        let shouldBeDark = false;
+
+        try {
+          const savedTheme = localStorage.getItem('theme');
+          const prefersDark =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+        } catch (e) {
+          // Fallback to CSS media query
+          return;
+        }
+
+        // Function to apply theme as soon as body is available
+        function applyTheme() {
+          if (document.body) {
+            if (shouldBeDark) {
+              document.body.classList.add('dark');
+            }
+          } else {
+            // Body not ready, try again on next tick
+            setTimeout(applyTheme, 0);
+          }
+        }
+
+        applyTheme();
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>

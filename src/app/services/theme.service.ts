@@ -30,8 +30,10 @@ export class ThemeService {
       // Check for saved theme preference or default to system preference
       const savedTheme = localStorage.getItem('theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const shouldUseDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
 
-      this.isDarkMode.set(savedTheme === 'dark' || (!savedTheme && prefersDark));
+      // Sync with any theme already applied in index.html
+      this.isDarkMode.set(shouldUseDark);
 
       // Listen for system theme changes
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
@@ -40,9 +42,6 @@ export class ThemeService {
         }
       });
     }
-
-    // Apply theme immediately to prevent flash
-    this.applyTheme();
 
     // React to theme changes
     effect(() => {
@@ -68,8 +67,14 @@ export class ThemeService {
   }
 
   private applyTheme(): void {
+    // Only apply theme changes on the client side
+    if (!this.isBrowser) {
+      return;
+    }
+
     const body = this.document.body;
 
+    // Simple .dark class management
     if (this.isDarkMode()) {
       this.renderer.addClass(body, 'dark');
     } else {
