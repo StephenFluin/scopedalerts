@@ -1,0 +1,200 @@
+<div class="page-container">
+  @if (!userService.isAdmin()) {
+  <div class="error-container">
+    <h1>Access Denied</h1>
+    <p>You don't have permission to access product management. Admin access is required.</p>
+    <a routerLink="/admin" class="btn btn-secondary">← Back to Admin Panel</a>
+  </div>
+  } @else {
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a routerLink="/admin">← Back to Admin Panel</a>
+    </div>
+
+    <h1>Product Management</h1>
+    <p class="page-description">Manage products that can be associated with notifications.</p>
+  </div>
+
+  <div class="content-section">
+    <h2>Add New Product</h2>
+    <form (submit)="addProduct($event)" class="product-form">
+      <div class="form-row">
+        <div class="form-field">
+          <label for="add-name">Product Name *</label>
+          <div class="field-description">The display name for your product</div>
+          <input
+            type="text"
+            id="add-name"
+            [field]="addProductForm.name"
+            class="form-input"
+            placeholder="My Awesome Product"
+          />
+          <app-validation-errors [errors]="addProductForm.name().errors()" />
+        </div>
+
+        <div class="form-field">
+          <label for="add-slug">URL Slug *</label>
+          <div class="field-description">
+            Used in URLs - lowercase letters, numbers, and hyphens only
+          </div>
+          <input
+            type="text"
+            id="add-slug"
+            [field]="addProductForm.slug"
+            class="form-input"
+            placeholder="my-awesome-product"
+          />
+          <app-validation-errors [errors]="addProductForm.slug().errors()" />
+        </div>
+      </div>
+
+      <div class="form-field form-field-full">
+        <label for="add-description">Description *</label>
+        <div class="field-description">Brief description of the product</div>
+        <textarea
+          id="add-description"
+          [field]="addProductForm.description"
+          class="form-textarea"
+          placeholder="A comprehensive description of what this product does..."
+        ></textarea>
+        <app-validation-errors [errors]="addProductForm.description().errors()" />
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="addProductForm().invalid() || isSubmitting()"
+        >
+          @if (isSubmitting()) { Creating... } @else { Create Product }
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="content-section">
+    <h2>Products ({{ productService.allProducts().length }})</h2>
+
+    @if (productService.loading()) {
+    <div class="loading-container">
+      <div class="loading-spinner">Loading products...</div>
+    </div>
+    } @else if (productService.allProducts().length === 0) {
+    <div class="empty-state">
+      <p>No products found. Create your first product above.</p>
+    </div>
+    } @else {
+    <div class="grid grid-cols-2">
+      @for (product of productService.allProducts(); track product.id) {
+      <div class="product-card">
+        <div class="product-header">
+          <div>
+            <h3>{{ product.name }}</h3>
+            <span class="product-slug">{{ product.slug }}</span>
+          </div>
+        </div>
+
+        <p class="product-description">{{ product.description }}</p>
+
+        <div class="product-meta">
+          <span class="product-id">ID: {{ product.id }}</span>
+        </div>
+
+        @if (editingProduct()?.id === product.id) {
+        <div class="edit-form">
+          <h4>Edit Product</h4>
+          <form (submit)="saveEdit($event)" class="product-form">
+            <div class="form-row">
+              <div class="form-field">
+                <label for="edit-name-{{ product.id }}">Product Name *</label>
+                <input
+                  type="text"
+                  id="edit-name-{{ product.id }}"
+                  [field]="editProductForm.name"
+                  class="form-input"
+                />
+                <app-validation-errors [errors]="editProductForm.name().errors()" />
+              </div>
+
+              <div class="form-field">
+                <label for="edit-slug-{{ product.id }}">URL Slug *</label>
+                <input
+                  type="text"
+                  id="edit-slug-{{ product.id }}"
+                  [field]="editProductForm.slug"
+                  class="form-input"
+                />
+                <app-validation-errors [errors]="editProductForm.slug().errors()" />
+              </div>
+            </div>
+
+            <div class="form-field form-field-full">
+              <label for="edit-description-{{ product.id }}">Description *</label>
+              <textarea
+                id="edit-description-{{ product.id }}"
+                [field]="editProductForm.description"
+                class="form-textarea"
+              ></textarea>
+              <app-validation-errors [errors]="editProductForm.description().errors()" />
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="editProductForm().invalid() || isSubmitting()"
+              >
+                @if (isSubmitting()) { Saving... } @else { Save Changes }
+              </button>
+              <button
+                type="button"
+                (click)="cancelEdit()"
+                class="btn btn-secondary"
+                [disabled]="isSubmitting()"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+        } @else {
+        <div class="product-actions">
+          <button type="button" (click)="startEdit(product)" class="btn btn-secondary">Edit</button>
+          <button type="button" (click)="confirmDelete(product)" class="btn btn-danger">
+            Delete
+          </button>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+
+  @if (showDeleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>Confirm Deletion</h3>
+      <p>
+        Are you sure you want to delete <strong>{{ productToDelete()?.name }}</strong
+        >?
+      </p>
+      <p class="warning-text">
+        This action cannot be undone. All notifications associated with this product will need to be
+        updated.
+      </p>
+      <div class="modal-actions">
+        <button type="button" (click)="cancelDelete()" class="btn btn-secondary">Cancel</button>
+        <button
+          type="button"
+          (click)="deleteProduct()"
+          class="btn btn-danger"
+          [disabled]="isSubmitting()"
+        >
+          @if (isSubmitting()) { Deleting... } @else { Delete Product }
+        </button>
+      </div>
+    </div>
+  </div>
+  } }
+</div>

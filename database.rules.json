@@ -2,7 +2,8 @@
   "rules": {
     "products": {
       ".read": true,
-      ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()",
+      ".indexOn": ["slug"]
     },
     "notices": {
       ".read": true,

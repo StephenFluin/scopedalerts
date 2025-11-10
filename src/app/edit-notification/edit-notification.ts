@@ -13,12 +13,9 @@ import {
   form,
   required,
   minLength,
-  validate,
   submit,
   Field,
   schema,
-  customError,
-  FieldPath,
   ValidationError,
 } from '@angular/forms/signals';
 import { DatePipe } from '@angular/common';
@@ -27,6 +24,7 @@ import { ProductService } from '../services/product.service';
 import { UserService } from '../services/user.service';
 import { Notice } from '../models/notice';
 import { ValidationErrorsComponent } from '../components/validation-errors';
+import { validateSlugPattern, generateSlug } from '../utils';
 
 // Interface for the Signal Form
 interface NotificationFormData {
@@ -34,23 +32,6 @@ interface NotificationFormData {
   slug: string;
   description: string;
   datetime: string;
-}
-
-// Custom validators
-function validateSlugPattern(path: FieldPath<string>): void {
-  validate(path, (ctx) => {
-    const value = ctx.value();
-    const pattern = /^[a-z0-9-]+$/;
-
-    if (!pattern.test(value)) {
-      return customError({
-        kind: 'pattern',
-        message: 'Slug must contain only lowercase letters, numbers, and hyphens',
-      });
-    }
-
-    return null;
-  });
 }
 
 // Notification form schema
@@ -540,7 +521,7 @@ export class EditNotification implements OnInit {
     effect(() => {
       const title = this.notificationForm.title().value();
       if (title && this.isNewNotification()) {
-        const slug = this.generateSlug(title);
+        const slug = generateSlug(title);
         const currentSlug = this.notificationData().slug;
         // Only update if the slug is actually different to prevent infinite loops
         if (slug !== currentSlug) {
@@ -730,14 +711,5 @@ export class EditNotification implements OnInit {
     } else {
       this.router.navigate(['/notifications', this.originalSlug()]);
     }
-  }
-
-  private generateSlug(title: string): string {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
   }
 }

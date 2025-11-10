@@ -24,6 +24,11 @@ export const routes: Routes = [
     title: 'Admin Panel - ScopedAlerts',
   },
   {
+    path: 'admin/products',
+    loadComponent: () => import('./admin/products/products').then((m) => m.AdminProductsComponent),
+    title: 'Product Management - ScopedAlerts',
+  },
+  {
     path: '**',
     redirectTo: '',
   },
