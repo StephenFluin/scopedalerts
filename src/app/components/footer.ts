@@ -10,7 +10,6 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
       border-top: 1px solid #e0e0e0;
       padding: 24px 16px;
       margin-top: auto;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
     :host-context(body.dark) .footer {
@@ -49,7 +48,6 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
       color: #3f51b5;
       text-decoration: none;
       font-weight: 500;
-      transition: color 0.2s ease;
       
       &:hover {
         color: #303f9f;

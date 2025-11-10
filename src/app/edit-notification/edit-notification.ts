@@ -231,7 +231,6 @@ const notificationSchema = schema<NotificationFormData>((path) => {
       cursor: pointer;
       padding: 8px;
       border-radius: 4px;
-      transition: background-color 0.2s ease;
       
       &:hover {
         background-color: rgba(0, 0, 0, 0.02);
@@ -301,7 +300,6 @@ const notificationSchema = schema<NotificationFormData>((path) => {
       border-radius: 8px;
       cursor: pointer;
       font-weight: 500;
-      transition: all 0.2s ease;
       
       &:hover:not(:disabled) {
         background-color: #f5f5f5;
@@ -330,7 +328,6 @@ const notificationSchema = schema<NotificationFormData>((path) => {
       border-radius: 8px;
       cursor: pointer;
       font-weight: 500;
-      transition: background-color 0.2s ease;
       
       &:hover:not(:disabled) {
         background-color: #303f9f;
@@ -350,7 +347,6 @@ const notificationSchema = schema<NotificationFormData>((path) => {
       border-radius: 8px;
       cursor: pointer;
       font-weight: 500;
-      transition: background-color 0.2s ease;
       
       &:hover:not(:disabled) {
         background-color: #d32f2f;

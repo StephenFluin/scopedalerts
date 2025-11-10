@@ -77,7 +77,8 @@
                 }
               ],
               "outputHashing": "all",
-              "namedChunks": true
+              "namedChunks": true,
+              "sourceMap": true
             },
             "development": {
               "optimization": false,

@@ -124,7 +124,6 @@ import { Admin as AdminModel } from '../models/admin';
       border: 1px solid #e0e0e0;
       border-radius: 8px;
       padding: 20px;
-      transition: all 0.2s ease;
       
       &:hover {
         background-color: #eeeeee;
@@ -214,7 +213,6 @@ import { Admin as AdminModel } from '../models/admin';
       font-size: 1rem;
       background-color: white;
       color: rgba(0, 0, 0, 0.87);
-      transition: border-color 0.2s ease;
       
       &:focus {
         outline: none;
@@ -244,7 +242,6 @@ import { Admin as AdminModel } from '../models/admin';
       border-radius: 8px;
       cursor: pointer;
       font-weight: 500;
-      transition: background-color 0.2s ease;
       white-space: nowrap;
       
       &:hover:not(:disabled) {
@@ -364,7 +361,6 @@ import { Admin as AdminModel } from '../models/admin';
       cursor: pointer;
       font-size: 0.875rem;
       font-weight: 500;
-      transition: background-color 0.2s ease;
       
       &:hover:not(:disabled) {
         background-color: #d32f2f;
@@ -384,7 +380,6 @@ import { Admin as AdminModel } from '../models/admin';
       border-radius: 6px;
       cursor: pointer;
       font-weight: 500;
-      transition: all 0.2s ease;
       
       &:hover {
         background-color: #f5f5f5;

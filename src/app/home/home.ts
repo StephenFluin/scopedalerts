@@ -53,7 +53,6 @@ import { Product } from '../models/product';
       padding: 8px 16px;
       border-radius: 8px;
       font-weight: 500;
-      transition: background-color 0.2s ease;
       
       &:hover {
         background-color: #303f9f;
@@ -138,7 +137,6 @@ import { Product } from '../models/product';
       border: 1px solid #e0e0e0;
       border-radius: 8px;
       padding: 16px;
-      transition: all 0.2s ease;
       
       &:hover {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -276,7 +274,6 @@ import { Product } from '../models/product';
       font-size: 24px;
       font-weight: 500;
       box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2);
-      transition: all 0.2s ease;
       z-index: 10;
       
       &:hover {

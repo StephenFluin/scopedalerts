@@ -59,7 +59,6 @@ import { ToastService } from '../services/toast.service';
       padding: 8px 12px;
       cursor: pointer;
       font-size: 1.2rem;
-      transition: all 0.2s ease;
       
       &:hover {
         background-color: #f5f5f5;
@@ -87,7 +86,6 @@ import { ToastService } from '../services/toast.service';
       padding: 8px 16px;
       cursor: pointer;
       font-weight: 500;
-      transition: background-color 0.2s ease;
       
       &:hover:not(:disabled) {
         background-color: #303f9f;
@@ -111,7 +109,6 @@ import { ToastService } from '../services/toast.service';
       cursor: pointer;
       padding: 4px 8px;
       border-radius: 4px;
-      transition: background-color 0.2s ease;
       user-select: none;
       
       &:hover {
@@ -142,7 +139,6 @@ import { ToastService } from '../services/toast.service';
       padding: 6px 12px;
       cursor: pointer;
       color: rgba(0, 0, 0, 0.87);
-      transition: all 0.2s ease;
       
       &:hover:not(:disabled) {
         background-color: #f5f5f5;

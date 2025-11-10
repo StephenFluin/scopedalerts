@@ -248,7 +248,6 @@ import { Product } from '../models/product';
       padding: 8px 16px;
       border-radius: 8px;
       font-weight: 500;
-      transition: background-color 0.2s ease;
       
       &:hover {
         background-color: #e91e63;
