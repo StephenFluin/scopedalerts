@@ -1,11 +1,58 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy, linkedSignal, computed, effect } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { 
+  form, 
+  required, 
+  minLength, 
+  validate, 
+  submit,
+  Field,
+  schema,
+  customError,
+  FieldPath,
+  ValidationError
+} from '@angular/forms/signals';
 import { DatePipe } from '@angular/common';
 import { NotificationService } from '../services/notification.service';
 import { ProductService } from '../services/product.service';
 import { UserService } from '../services/user.service';
 import { Notice } from '../models/notice';
+import { ValidationErrorsComponent } from '../components/validation-errors';
+
+// Interface for the Signal Form
+interface NotificationFormData {
+  title: string;
+  slug: string;
+  description: string;
+  datetime: string;
+}
+
+// Custom validators
+function validateSlugPattern(path: FieldPath<string>): void {
+  validate(path, (ctx) => {
+    const value = ctx.value();
+    const pattern = /^[a-z0-9-]+$/;
+    
+    if (!pattern.test(value)) {
+      return customError({
+        kind: 'pattern',
+        message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+      });
+    }
+    
+    return null;
+  });
+}
+
+// Notification form schema
+const notificationSchema = schema<NotificationFormData>((path) => {
+  required(path.title, { message: 'Title is required' });
+  required(path.slug, { message: 'Slug is required' });
+  required(path.description, { message: 'Description is required' });
+  required(path.datetime, { message: 'Date and time are required' });
+  
+  validateSlugPattern(path.slug);
+});
 
 @Component({
   selector: 'app-edit-notification',
@@ -412,12 +459,11 @@ import { Notice } from '../models/notice';
       }
     }
   `,
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [RouterLink, Field, ValidationErrorsComponent],
 })
 export class EditNotification implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private formBuilder = inject(FormBuilder);
   protected readonly notificationService = inject(NotificationService);
   protected readonly productService = inject(ProductService);
   protected readonly userService = inject(UserService);
@@ -428,21 +474,28 @@ export class EditNotification implements OnInit {
   protected readonly selectedProducts = signal<string[]>([]);
   protected readonly originalSlug = signal<string>('');
 
-  protected notificationForm: FormGroup;
+  // Signal Form setup
+  protected notificationData = linkedSignal<NotificationFormData>(() => ({
+    title: '',
+    slug: '',
+    description: '',
+    datetime: '',
+  }));
+
+  protected notificationForm = form(this.notificationData, notificationSchema);
+
+  // Computed signal to check for products validation
+  protected hasProductsError = computed(() => 
+    this.selectedProducts().length === 0 && this.notificationForm().touched()
+  );
 
   constructor() {
-    this.notificationForm = this.formBuilder.group({
-      title: ['', Validators.required],
-      slug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
-      description: ['', Validators.required],
-      datetime: ['', Validators.required],
-    });
-
-    // Auto-generate slug from title
-    this.notificationForm.get('title')?.valueChanges.subscribe((title) => {
+    // Auto-generate slug from title for new notifications
+    effect(() => {
+      const title = this.notificationForm.title().value();
       if (title && this.isNewNotification()) {
         const slug = this.generateSlug(title);
-        this.notificationForm.patchValue({ slug }, { emitEvent: false });
+        this.notificationData.update((data: NotificationFormData) => ({ ...data, slug }));
       }
     });
   }
@@ -485,7 +538,12 @@ export class EditNotification implements OnInit {
         const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
           .toISOString()
           .slice(0, 16);
-        this.notificationForm.patchValue({ datetime: localDateTime });
+        this.notificationData.update(() => ({
+          title: '',
+          slug: '',
+          description: '',
+          datetime: localDateTime,
+        }));
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -501,12 +559,12 @@ export class EditNotification implements OnInit {
       .toISOString()
       .slice(0, 16);
 
-    this.notificationForm.patchValue({
+    this.notificationData.update(() => ({
       title: notification.title,
       slug: notification.slug,
       description: notification.description,
       datetime: localDateTime,
-    });
+    }));
 
     this.selectedProducts.set([...notification.affectedProducts]);
   }
@@ -516,9 +574,9 @@ export class EditNotification implements OnInit {
   }
 
   protected toggleProduct(productId: string): void {
-    this.selectedProducts.update((selected) => {
+    this.selectedProducts.update((selected: string[]) => {
       if (selected.includes(productId)) {
-        return selected.filter((id) => id !== productId);
+        return selected.filter((id: string) => id !== productId);
       } else {
         return [...selected, productId];
       }
@@ -526,50 +584,57 @@ export class EditNotification implements OnInit {
   }
 
   protected async onSubmit(): Promise<void> {
-    if (this.notificationForm.invalid || this.selectedProducts().length === 0) {
-      this.notificationForm.markAllAsTouched();
+    // Validate products selection
+    if (this.selectedProducts().length === 0) {
       return;
     }
 
     this.isSaving.set(true);
 
-    try {
-      const formValue = this.notificationForm.value;
+    submit(this.notificationForm, async (form) => {
+      try {
+        const formValue = form().value();
 
-      // Convert local datetime to UTC
-      const localDate = new Date(formValue.datetime);
-      const utcDateTime = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000);
+        // Convert local datetime to UTC
+        const localDate = new Date(formValue.datetime);
+        const utcDateTime = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000);
 
-      const notificationData = {
-        title: formValue.title,
-        slug: formValue.slug,
-        description: formValue.description,
-        datetime: utcDateTime.toISOString(),
-        affectedProducts: this.selectedProducts(),
-      };
+        const notificationData = {
+          title: formValue.title,
+          slug: formValue.slug,
+          description: formValue.description,
+          datetime: utcDateTime.toISOString(),
+          affectedProducts: this.selectedProducts(),
+        };
 
-      if (this.isNewNotification()) {
-        const id = await this.notificationService.createNotification(notificationData);
-        this.router.navigate(['/notifications', formValue.slug]);
-      } else {
-        // Find the existing notification to get its ID
-        const existingNotification = await this.notificationService.getNotificationBySlug(
-          this.originalSlug()
-        );
-        if (existingNotification) {
-          await this.notificationService.updateNotification(
-            existingNotification.id,
-            notificationData
-          );
+        if (this.isNewNotification()) {
+          const id = await this.notificationService.createNotification(notificationData);
           this.router.navigate(['/notifications', formValue.slug]);
+        } else {
+          // Find the existing notification to get its ID
+          const existingNotification = await this.notificationService.getNotificationBySlug(
+            this.originalSlug()
+          );
+          if (existingNotification) {
+            await this.notificationService.updateNotification(
+              existingNotification.id,
+              notificationData
+            );
+            this.router.navigate(['/notifications', formValue.slug]);
+          }
         }
+
+        return null; // No error
+      } catch (error) {
+        console.error('Error saving notification:', error);
+        return {
+          kind: 'processing_error',
+          message: 'Failed to save notification. Please try again.',
+        };
+      } finally {
+        this.isSaving.set(false);
       }
-    } catch (error) {
-      console.error('Error saving notification:', error);
-      // TODO: Show error message to user
-    } finally {
-      this.isSaving.set(false);
-    }
+    });
   }
 
   protected confirmDelete(): void {

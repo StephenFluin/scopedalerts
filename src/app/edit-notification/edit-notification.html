@@ -16,7 +16,7 @@
       @if (!isNewNotification()) {
       <span class="breadcrumb-separator">/</span>
       <a [routerLink]="['/notifications', originalSlug()]" class="breadcrumb-link">
-        {{ notificationForm.get('title')?.value || 'Notification' }}
+        {{ notificationForm.title().value() || 'Notification' }}
       </a>
       }
     </div>
@@ -24,20 +24,18 @@
     <h1>{{ isNewNotification() ? 'Create New Notification' : 'Edit Notification' }}</h1>
   </div>
 
-  <form [formGroup]="notificationForm" (ngSubmit)="onSubmit()" class="notification-form">
+  <form (ngSubmit)="onSubmit()" class="notification-form">
     <div class="form-section">
       <div class="form-field">
         <label for="title">Title *</label>
         <input
           type="text"
           id="title"
-          formControlName="title"
+          [field]="notificationForm.title"
           class="form-input"
           placeholder="Enter notification title"
         />
-        @if (notificationForm.get('title')?.invalid && notificationForm.get('title')?.touched) {
-        <div class="error-message">Title is required</div>
-        }
+        <app-validation-errors [errors]="notificationForm.title().errors()" />
       </div>
 
       <div class="form-field">
@@ -45,41 +43,34 @@
         <input
           type="text"
           id="slug"
-          formControlName="slug"
+          [field]="notificationForm.slug"
           class="form-input"
           placeholder="url-friendly-slug"
         />
-        @if (notificationForm.get('slug')?.invalid && notificationForm.get('slug')?.touched) {
-        <div class="error-message">
-          @if (notificationForm.get('slug')?.errors?.['required']) { Slug is required } @if
-          (notificationForm.get('slug')?.errors?.['pattern']) { Slug must contain only lowercase
-          letters, numbers, and hyphens }
-        </div>
-        }
+        <app-validation-errors [errors]="notificationForm.slug().errors()" />
       </div>
 
       <div class="form-field">
         <label for="datetime">Date & Time *</label>
-        <input type="datetime-local" id="datetime" formControlName="datetime" class="form-input" />
-        @if (notificationForm.get('datetime')?.invalid && notificationForm.get('datetime')?.touched)
-        {
-        <div class="error-message">Date and time are required</div>
-        }
+        <input 
+          type="datetime-local" 
+          id="datetime" 
+          [field]="notificationForm.datetime" 
+          class="form-input" 
+        />
+        <app-validation-errors [errors]="notificationForm.datetime().errors()" />
       </div>
 
       <div class="form-field">
         <label for="description">Description *</label>
         <textarea
           id="description"
-          formControlName="description"
+          [field]="notificationForm.description"
           class="form-textarea"
           rows="6"
           placeholder="Enter detailed description of the notification"
         ></textarea>
-        @if (notificationForm.get('description')?.invalid &&
-        notificationForm.get('description')?.touched) {
-        <div class="error-message">Description is required</div>
-        }
+        <app-validation-errors [errors]="notificationForm.description().errors()" />
       </div>
 
       <div class="form-field">
@@ -98,7 +89,7 @@
           </label>
           }
         </div>
-        @if (selectedProducts().length === 0 && notificationForm.touched) {
+        @if (selectedProducts().length === 0 && notificationForm().touched()) {
         <div class="error-message">At least one product must be selected</div>
         }
       </div>
@@ -113,7 +104,7 @@
         <button
           type="submit"
           class="save-btn"
-          [disabled]="notificationForm.invalid || selectedProducts().length === 0 || isSaving()"
+          [disabled]="notificationForm().invalid() || selectedProducts().length === 0 || isSaving()"
         >
           @if (isSaving()) {
           {{ isNewNotification() ? 'Creating...' : 'Saving...' }}
