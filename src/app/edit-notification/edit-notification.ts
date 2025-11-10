@@ -500,7 +500,11 @@ export class EditNotification implements OnInit {
       const title = this.notificationForm.title().value();
       if (title && this.isNewNotification()) {
         const slug = this.generateSlug(title);
-        this.notificationData.update((data: NotificationFormData) => ({ ...data, slug }));
+        const currentSlug = this.notificationData().slug;
+        // Only update if the slug is actually different to prevent infinite loops
+        if (slug !== currentSlug) {
+          this.notificationData.update((data: NotificationFormData) => ({ ...data, slug }));
+        }
       }
     });
   }
@@ -591,7 +595,9 @@ export class EditNotification implements OnInit {
     });
   }
 
-  protected async onSubmit(): Promise<void> {
+  protected async onSubmit(event: Event): Promise<void> {
+    console.log('attempgint submit');
+    event.preventDefault();
     // Validate products selection
     if (this.selectedProducts().length === 0) {
       return;
@@ -602,6 +608,7 @@ export class EditNotification implements OnInit {
     submit(this.notificationForm, async (form) => {
       try {
         const formValue = form().value();
+        console.log('form value:', formValue);
 
         // Convert local datetime to UTC
         const localDate = new Date(formValue.datetime);
@@ -616,6 +623,7 @@ export class EditNotification implements OnInit {
         };
 
         if (this.isNewNotification()) {
+          console.log('Creating notification with data:', notificationData);
           const id = await this.notificationService.createNotification(notificationData);
           this.router.navigate(['/notifications', formValue.slug]);
         } else {

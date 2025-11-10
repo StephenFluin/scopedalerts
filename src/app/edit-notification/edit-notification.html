@@ -24,7 +24,7 @@
     <h1>{{ isNewNotification() ? 'Create New Notification' : 'Edit Notification' }}</h1>
   </div>
 
-  <form (ngSubmit)="onSubmit()" class="notification-form">
+  <form (submit)="onSubmit($event)" class="notification-form">
     <div class="form-section">
       <div class="form-field">
         <label for="title">Title *</label>
