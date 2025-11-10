@@ -82,42 +82,8 @@ app.get('/rss', async (req, res) => {
             }));
         }
       } catch (error) {
-        console.warn('Firebase not available, using mock data:', error);
+        console.warn('Firebase not available:', error);
       }
-    }
-
-    if (notifications.length === 0) {
-      // Mock notifications for development (fallback when Firebase is unavailable)
-      const mockNotifications = [
-        {
-          title: 'Blanket Service Maintenance',
-          description:
-            'Scheduled maintenance will occur on the blanket service platform from 2:00 AM to 4:00 AM UTC.',
-          link: 'https://scopedalerts.example.com/notifications/blanket-service-maintenance',
-          pubDate: new Date('2024-11-07T02:00:00Z'),
-          guid: 'blanket-service-maintenance',
-          affectedProducts: ['blanket-eol'],
-        },
-        {
-          title: 'Portal Security Update',
-          description: 'A critical security update will be deployed to the portal system.',
-          link: 'https://scopedalerts.example.com/notifications/portal-security-update',
-          pubDate: new Date('2024-11-06T15:30:00Z'),
-          guid: 'portal-security-update',
-          affectedProducts: ['portal'],
-        },
-        {
-          title: 'EOLDs System Deprecation Notice',
-          description: 'The EOLDs system will be deprecated on December 31, 2024.',
-          link: 'https://scopedalerts.example.com/notifications/eolds-system-deprecation',
-          pubDate: new Date('2024-11-05T09:00:00Z'),
-          guid: 'eolds-system-deprecation',
-          affectedProducts: ['eolds'],
-        },
-      ];
-
-      // Use Firebase data if available, otherwise fall back to mock
-      notifications = notifications.length > 0 ? notifications : mockNotifications;
     }
 
     // Filter notifications based on products if specified

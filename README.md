@@ -157,16 +157,6 @@ npm run build
 npm run serve:ssr:scopedalerts
 ```
 
-## Mock Data
-
-The application includes comprehensive mock data for development:
-
-- Sample notifications for different products
-- Mock users and admin accounts
-- Product catalog with realistic data
-
-When Firebase is not configured, the app gracefully falls back to mock data.
-
 ## Architecture Highlights
 
 - **Standalone Components**: No NgModules required

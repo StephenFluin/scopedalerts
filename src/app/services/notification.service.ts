@@ -18,7 +18,7 @@ export class NotificationService {
   readonly loading = this.isLoading.asReadonly();
 
   constructor() {
-    this.loadMockData();
+    // Initialize with empty notifications
   }
 
   async loadNotifications(limit = 20, startAfter?: string): Promise<Notice[]> {
@@ -49,15 +49,14 @@ export class NotificationService {
         }
       }
 
-      // Fallback to mock data
-      const mockNotifications = this.getMockNotifications();
-      this.notifications.set(mockNotifications);
-      return mockNotifications;
+      // No fallback data - return empty array if Firebase is not available
+      this.notifications.set([]);
+      return [];
     } catch (error) {
       console.error('Error loading notifications:', error);
-      const mockNotifications = this.getMockNotifications();
-      this.notifications.set(mockNotifications);
-      return mockNotifications;
+      // Return empty array on error instead of mock data
+      this.notifications.set([]);
+      return [];
     } finally {
       this.isLoading.set(false);
     }
@@ -235,49 +234,5 @@ export class NotificationService {
     return this.notifications().filter((notice) =>
       notice.affectedProducts.some((productId) => productIds.includes(productId))
     );
-  }
-
-  private loadMockData(): void {
-    const mockNotifications = this.getMockNotifications();
-    this.notifications.set(mockNotifications);
-  }
-
-  private getMockNotifications(): Notice[] {
-    const now = new Date();
-    return [
-      {
-        id: '1',
-        title: 'Blanket Service Maintenance',
-        description:
-          'Scheduled maintenance will occur on the blanket service platform from 2:00 AM to 4:00 AM UTC. Users may experience temporary service interruptions during this window.',
-        datetime: new Date('2024-11-07T02:00:00Z').toISOString(),
-        slug: 'blanket-service-maintenance',
-        affectedProducts: ['blanket-eol'],
-        createdAt: new Date('2024-11-06T10:00:00Z'),
-        updatedAt: new Date('2024-11-06T10:00:00Z'),
-      },
-      {
-        id: '2',
-        title: 'Portal Security Update',
-        description:
-          'A critical security update will be deployed to the portal system. All users will be automatically logged out and required to sign in again.',
-        datetime: new Date('2024-11-06T15:30:00Z').toISOString(),
-        slug: 'portal-security-update',
-        affectedProducts: ['portal'],
-        createdAt: new Date('2024-11-05T14:00:00Z'),
-        updatedAt: new Date('2024-11-05T14:00:00Z'),
-      },
-      {
-        id: '3',
-        title: 'EOLDs System Deprecation Notice',
-        description:
-          'The EOLDs system will be deprecated on December 31, 2024. Users are advised to migrate their data to the new platform before this date.',
-        datetime: new Date('2024-11-05T09:00:00Z').toISOString(),
-        slug: 'eolds-system-deprecation',
-        affectedProducts: ['eolds'],
-        createdAt: new Date('2024-11-04T16:00:00Z'),
-        updatedAt: new Date('2024-11-04T16:00:00Z'),
-      },
-    ];
   }
 }
