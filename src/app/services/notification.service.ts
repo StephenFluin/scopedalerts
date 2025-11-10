@@ -1,7 +1,8 @@
-import { Injectable, signal, inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, signal, inject, PLATFORM_ID, PendingTasks } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Notice } from '../models/notice';
 import { FirebaseService } from './firebase.service';
+import firebase from 'firebase/compat/app';
 
 @Injectable({
   providedIn: 'root',
@@ -10,6 +11,7 @@ export class NotificationService {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
   private firebaseService = inject(FirebaseService);
+  private pendingTasks = inject(PendingTasks);
 
   private notifications = signal<Notice[]>([]);
   private isLoading = signal(false);
@@ -22,7 +24,10 @@ export class NotificationService {
   }
 
   async loadNotifications(limit = 20, startAfter?: string): Promise<Notice[]> {
+    // Add a pending task to ensure SSR waits for this operation
+    const taskCleanup = this.pendingTasks.add();
     this.isLoading.set(true);
+
     try {
       const firebaseDatabase = await this.firebaseService.getDatabase();
       const databaseMethods = await this.firebaseService.getDatabaseMethods();
@@ -51,15 +56,15 @@ export class NotificationService {
 
       // No fallback data - return empty array if Firebase is not available
       this.notifications.set([]);
-      return [];
     } catch (error) {
       console.error('Error loading notifications:', error);
       // Return empty array on error instead of mock data
       this.notifications.set([]);
-      return [];
     } finally {
       this.isLoading.set(false);
+      taskCleanup();
     }
+    return [];
   }
 
   async getNotificationBySlug(slug: string): Promise<Notice | null> {

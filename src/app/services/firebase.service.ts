@@ -66,10 +66,6 @@ export class FirebaseService {
   }
 
   async getDatabase(): Promise<any> {
-    if (!this.isBrowser) {
-      return null;
-    }
-
     await this.initializeFirebase();
     return this.database;
   }

@@ -1,4 +1,4 @@
-import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, signal, PLATFORM_ID, inject, PendingTasks } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Product } from '../models/product';
 import { FirebaseService } from './firebase.service';
@@ -11,6 +11,7 @@ export class ProductService {
   private isLoading = signal(false);
   private platformId = inject(PLATFORM_ID);
   private firebaseService = inject(FirebaseService);
+  private pendingTasks = inject(PendingTasks);
 
   readonly allProducts = this.products.asReadonly();
   readonly loading = this.isLoading.asReadonly();
@@ -20,7 +21,10 @@ export class ProductService {
   }
 
   async loadProducts(): Promise<Product[]> {
+    // Add a pending task to ensure SSR waits for this operation
+    const taskCleanup = this.pendingTasks.add();
     this.isLoading.set(true);
+
     try {
       const firebaseDatabase = await this.firebaseService.getDatabase();
       const databaseMethods = await this.firebaseService.getDatabaseMethods();
@@ -40,18 +44,12 @@ export class ProductService {
           return products;
         }
       }
-
-      const mockProducts = this.getMockProducts();
-      this.products.set(mockProducts);
-      return mockProducts;
     } catch (error) {
-      console.error('Error loading products:', error);
-      const mockProducts = this.getMockProducts();
-      this.products.set(mockProducts);
-      return mockProducts;
     } finally {
       this.isLoading.set(false);
+      taskCleanup();
     }
+    return [];
   }
   async getProductBySlug(slug: string): Promise<Product | null> {
     try {
@@ -192,27 +190,5 @@ export class ProductService {
       console.error('Error deleting product:', error);
       return false;
     }
-  }
-  private getMockProducts(): Product[] {
-    return [
-      {
-        id: 'blanket-eol',
-        name: 'Blanket EOL',
-        description: 'End-of-life management system for blanket products',
-        slug: 'blanket-eol',
-      },
-      {
-        id: 'eolds',
-        name: 'EOLDs',
-        description: 'Enterprise Operations and Logistics Data System',
-        slug: 'eolds',
-      },
-      {
-        id: 'portal',
-        name: 'Portal',
-        description: 'Main customer portal and dashboard system',
-        slug: 'portal',
-      },
-    ];
   }
 }

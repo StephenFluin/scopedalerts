@@ -5,6 +5,7 @@ import {
   computed,
   OnInit,
   ChangeDetectionStrategy,
+  PendingTasks,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
@@ -338,6 +339,7 @@ export class Home implements OnInit {
   protected readonly notificationService = inject(NotificationService);
   protected readonly productService = inject(ProductService);
   protected readonly userService = inject(UserService);
+  private readonly pendingTasks = inject(PendingTasks);
 
   protected readonly selectedProductIds = signal<string[]>([]);
 
@@ -365,10 +367,12 @@ export class Home implements OnInit {
   }
 
   private async loadData(): Promise<void> {
-    await Promise.all([
-      this.notificationService.loadNotifications(),
-      this.productService.loadProducts(),
-    ]);
+    this.pendingTasks.run(async () => {
+      await Promise.all([
+        this.notificationService.loadNotifications(),
+        this.productService.loadProducts(),
+      ]);
+    });
   }
 
   toggleAllProducts(): void {
