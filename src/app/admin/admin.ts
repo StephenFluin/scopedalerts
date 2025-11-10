@@ -565,7 +565,10 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    // Ensure auth is initialized to check admin status
+    await this.userService.ensureAuthInitialized();
+
     if (this.userService.isAdmin()) {
       this.loadAdmins();
     }

@@ -28,16 +28,13 @@
         </button>
         } @else {
         <div class="user-info">
-          <span 
+          <span
             class="user-name"
             [title]="userService.user()?.uid || ''"
             (click)="copyUidToClipboard()"
           >
-            {{ userService.user()?.displayName }}
+            {{ userService.user()?.displayName }}@if (userService.isAdmin()) { (Admin)}
           </span>
-          @if (userService.isAdmin()) {
-          <span class="admin-badge">Admin</span>
-          }
           <button
             type="button"
             class="logout-btn"

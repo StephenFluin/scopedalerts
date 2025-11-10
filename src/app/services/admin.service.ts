@@ -1,6 +1,7 @@
 import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Admin } from '../models/admin';
+import { FirebaseService } from './firebase.service';
 
 @Injectable({
   providedIn: 'root',
@@ -9,38 +10,24 @@ export class AdminService {
   private admins = signal<Admin[]>([]);
   private isLoading = signal(false);
   private platformId = inject(PLATFORM_ID);
-  private firebaseDatabase: any = null;
+  private firebaseService = inject(FirebaseService);
 
   readonly allAdmins = this.admins.asReadonly();
   readonly loading = this.isLoading.asReadonly();
 
   constructor() {
-    this.initializeFirebase().then(() => {
-      this.loadAdmins();
-    });
-  }
-
-  private async initializeFirebase(): Promise<void> {
-    try {
-      if (isPlatformBrowser(this.platformId)) {
-        const { initializeApp } = await import('firebase/app');
-        const { getDatabase } = await import('firebase/database');
-        const { firebaseConfig } = await import('../config/firebase.config');
-
-        const app = initializeApp(firebaseConfig);
-        this.firebaseDatabase = getDatabase(app);
-      }
-    } catch (error) {
-      console.warn('Firebase Database not available, using mock data:', error);
-    }
+    this.loadAdmins();
   }
 
   async loadAdmins(): Promise<Admin[]> {
     this.isLoading.set(true);
     try {
-      if (this.firebaseDatabase) {
-        const { ref, get } = await import('firebase/database');
-        const adminsRef = ref(this.firebaseDatabase, 'admins');
+      const firebaseDatabase = await this.firebaseService.getDatabase();
+      const databaseMethods = await this.firebaseService.getDatabaseMethods();
+
+      if (firebaseDatabase && databaseMethods) {
+        const { ref, get } = databaseMethods;
+        const adminsRef = ref(firebaseDatabase, 'admins');
         const snapshot = await get(adminsRef);
 
         if (snapshot.exists()) {
@@ -69,10 +56,13 @@ export class AdminService {
 
   async addAdmin(admin: Omit<Admin, 'uid'>): Promise<void> {
     try {
-      if (this.firebaseDatabase) {
-        const { ref, set } = await import('firebase/database');
+      const firebaseDatabase = await this.firebaseService.getDatabase();
+      const databaseMethods = await this.firebaseService.getDatabaseMethods();
+
+      if (firebaseDatabase && databaseMethods) {
+        const { ref, set } = databaseMethods;
         const newUid = `uid-${Date.now()}`;
-        const adminRef = ref(this.firebaseDatabase, `admins/${newUid}`);
+        const adminRef = ref(firebaseDatabase, `admins/${newUid}`);
         await set(adminRef, admin);
 
         // Update local state
@@ -91,9 +81,12 @@ export class AdminService {
 
   async removeAdmin(uid: string): Promise<void> {
     try {
-      if (this.firebaseDatabase) {
-        const { ref, remove } = await import('firebase/database');
-        const adminRef = ref(this.firebaseDatabase, `admins/${uid}`);
+      const firebaseDatabase = await this.firebaseService.getDatabase();
+      const databaseMethods = await this.firebaseService.getDatabaseMethods();
+
+      if (firebaseDatabase && databaseMethods) {
+        const { ref, remove } = databaseMethods;
+        const adminRef = ref(firebaseDatabase, `admins/${uid}`);
         await remove(adminRef);
 
         // Update local state

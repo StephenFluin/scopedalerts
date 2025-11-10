@@ -12,15 +12,15 @@ export interface Toast {
 })
 export class ToastService {
   private toasts = signal<Toast[]>([]);
-  
+
   readonly activeToasts = this.toasts.asReadonly();
 
   show(message: string, type: Toast['type'] = 'info', duration: number = 3000): void {
     const id = this.generateId();
     const toast: Toast = { id, message, type, duration };
-    
-    this.toasts.update(toasts => [...toasts, toast]);
-    
+
+    this.toasts.update((toasts) => [...toasts, toast]);
+
     if (duration > 0) {
       setTimeout(() => {
         this.remove(id);
@@ -45,7 +45,7 @@ export class ToastService {
   }
 
   remove(id: string): void {
-    this.toasts.update(toasts => toasts.filter(toast => toast.id !== id));
+    this.toasts.update((toasts) => toasts.filter((toast) => toast.id !== id));
   }
 
   clear(): void {

@@ -7,32 +7,28 @@ import { ToastService } from '../services/toast.service';
   template: `
     <div class="toast-container">
       @for (toast of toastService.activeToasts(); track toast.id) {
-        <div 
-          class="toast"
-          [class]="'toast-' + toast.type"
-          [attr.aria-live]="toast.type === 'error' ? 'assertive' : 'polite'"
-          role="alert"
-        >
-          <div class="toast-content">
-            <span class="toast-icon">
-              @switch (toast.type) {
-                @case ('success') { ✅ }
-                @case ('error') { ❌ }
-                @case ('warning') { ⚠️ }
-                @default { ℹ️ }
-              }
-            </span>
-            <span class="toast-message">{{ toast.message }}</span>
-          </div>
-          <button 
-            type="button" 
-            class="toast-close"
-            (click)="toastService.remove(toast.id)"
-            aria-label="Close notification"
-          >
-            ×
-          </button>
+      <div
+        class="toast"
+        [class]="'toast-' + toast.type"
+        [attr.aria-live]="toast.type === 'error' ? 'assertive' : 'polite'"
+        role="alert"
+      >
+        <div class="toast-content">
+          <span class="toast-icon">
+            @switch (toast.type) { @case ('success') { ✅ } @case ('error') { ❌ } @case ('warning')
+            { ⚠️ } @default { ℹ️ } }
+          </span>
+          <span class="toast-message">{{ toast.message }}</span>
         </div>
+        <button
+          type="button"
+          class="toast-close"
+          (click)="toastService.remove(toast.id)"
+          aria-label="Close notification"
+        >
+          ×
+        </button>
+      </div>
       }
     </div>
   `,

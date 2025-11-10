@@ -135,15 +135,6 @@ import { ToastService } from '../services/toast.service';
       }
     }
 
-    .admin-badge {
-      background-color: #ff4081;
-      color: white;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-
     .logout-btn {
       background: none;
       border: 1px solid #e0e0e0;

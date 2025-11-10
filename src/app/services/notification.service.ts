@@ -25,9 +25,10 @@ export class NotificationService {
     this.isLoading.set(true);
     try {
       const firebaseDatabase = await this.firebaseService.getDatabase();
-      
-      if (firebaseDatabase) {
-        const { ref, get, query, orderByChild, limitToLast } = await import('firebase/database');
+      const databaseMethods = await this.firebaseService.getDatabaseMethods();
+
+      if (firebaseDatabase && databaseMethods) {
+        const { ref, get, query, orderByChild, limitToLast } = databaseMethods;
         const noticesRef = ref(firebaseDatabase, 'notices');
         const noticesQuery = query(noticesRef, orderByChild('datetime'), limitToLast(limit));
         const snapshot = await get(noticesQuery);
@@ -65,9 +66,10 @@ export class NotificationService {
   async getNotificationBySlug(slug: string): Promise<Notice | null> {
     try {
       const firebaseDatabase = await this.firebaseService.getDatabase();
-      
-      if (firebaseDatabase) {
-        const { ref, get, query, orderByChild, equalTo } = await import('firebase/database');
+      const databaseMethods = await this.firebaseService.getDatabaseMethods();
+
+      if (firebaseDatabase && databaseMethods) {
+        const { ref, get, query, orderByChild, equalTo } = databaseMethods;
         const noticesRef = ref(firebaseDatabase, 'notices');
         const queryRef = query(noticesRef, orderByChild('slug'), equalTo(slug));
         const snapshot = await get(queryRef);
@@ -98,9 +100,10 @@ export class NotificationService {
   ): Promise<Notice> {
     try {
       const firebaseDatabase = await this.firebaseService.getDatabase();
-      
-      if (firebaseDatabase) {
-        const { ref, push, serverTimestamp } = await import('firebase/database');
+      const databaseMethods = await this.firebaseService.getDatabaseMethods();
+
+      if (firebaseDatabase && databaseMethods) {
+        const { ref, push, serverTimestamp } = databaseMethods;
         const noticesRef = ref(firebaseDatabase, 'notices');
         const newNotice = {
           ...notice,
@@ -138,9 +141,10 @@ export class NotificationService {
   async updateNotification(id: string, updates: Partial<Notice>): Promise<Notice | null> {
     try {
       const firebaseDatabase = await this.firebaseService.getDatabase();
-      
-      if (firebaseDatabase) {
-        const { ref, get, update, serverTimestamp } = await import('firebase/database');
+      const databaseMethods = await this.firebaseService.getDatabaseMethods();
+
+      if (firebaseDatabase && databaseMethods) {
+        const { ref, get, update, serverTimestamp } = databaseMethods;
         const noticeRef = ref(firebaseDatabase, `notices/${id}`);
         const snapshot = await get(noticeRef);
 
@@ -205,9 +209,10 @@ export class NotificationService {
   async deleteNotification(id: string): Promise<boolean> {
     try {
       const firebaseDatabase = await this.firebaseService.getDatabase();
-      
-      if (firebaseDatabase) {
-        const { ref, remove } = await import('firebase/database');
+      const databaseMethods = await this.firebaseService.getDatabaseMethods();
+
+      if (firebaseDatabase && databaseMethods) {
+        const { ref, remove } = databaseMethods;
         const noticeRef = ref(firebaseDatabase, `notices/${id}`);
         await remove(noticeRef);
 

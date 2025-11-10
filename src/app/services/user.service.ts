@@ -13,6 +13,7 @@ export class UserService {
 
   private currentUser = signal<User | null>(null);
   private isLoading = signal(false);
+  private authInitialized = false;
 
   readonly user = this.currentUser.asReadonly();
   readonly loading = this.isLoading.asReadonly();
@@ -27,21 +28,42 @@ export class UserService {
   readonly isAdmin = computed(() => this.role() === 'admin');
 
   constructor() {
-    if (this.isBrowser) {
+    // Only initialize auth if user has previously attempted to login
+    if (this.isBrowser && this.hasUserTriedLogin()) {
       this.initializeAuth();
     }
   }
 
+  private hasUserTriedLogin(): boolean {
+    try {
+      return localStorage.getItem('scopedalerts_has_tried_login') === 'true';
+    } catch {
+      // If localStorage is not available (SSR), return false
+      return false;
+    }
+  }
+
+  private markUserHasTriedLogin(): void {
+    try {
+      localStorage.setItem('scopedalerts_has_tried_login', 'true');
+    } catch {
+      // Ignore if localStorage is not available
+    }
+  }
+
   private async initializeAuth(): Promise<void> {
+    if (this.authInitialized) {
+      return;
+    }
+
     try {
       if (this.firebaseService.isBrowserEnvironment()) {
         const firebaseAuth = await this.firebaseService.getAuth();
-        
-        if (firebaseAuth) {
-          const { onAuthStateChanged } = await import('firebase/auth');
-          
+        const authMethods = await this.firebaseService.getAuthMethods();
+
+        if (firebaseAuth && authMethods) {
           // Listen for auth state changes
-          onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
+          authMethods.onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
             if (firebaseUser) {
               const role = await this.checkUserRole(firebaseUser.uid);
               this.currentUser.set({
@@ -55,6 +77,7 @@ export class UserService {
             }
           });
         }
+        this.authInitialized = true;
       }
     } catch (error) {
       console.warn('Firebase not available, using mock data:', error);
@@ -64,13 +87,22 @@ export class UserService {
 
   async signInWithGoogle(): Promise<void> {
     this.isLoading.set(true);
+
+    // Mark that user has attempted login
+    this.markUserHasTriedLogin();
+
+    // Initialize auth if not already done
+    if (!this.authInitialized && this.isBrowser) {
+      await this.initializeAuth();
+    }
+
     try {
       const firebaseAuth = await this.firebaseService.getAuth();
-      
-      if (firebaseAuth) {
-        const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(firebaseAuth, provider);
+      const authMethods = await this.firebaseService.getAuthMethods();
+
+      if (firebaseAuth && authMethods) {
+        const provider = new authMethods.GoogleAuthProvider();
+        await authMethods.signInWithPopup(firebaseAuth, provider);
         // User state will be updated via onAuthStateChanged listener
       } else {
         // Fallback to mock sign-in for development
@@ -90,14 +122,25 @@ export class UserService {
     }
   }
 
+  /**
+   * Manually initialize auth (e.g., when checking auth state for admin features)
+   * This will mark the user as having tried login and initialize Firebase auth
+   */
+  async ensureAuthInitialized(): Promise<void> {
+    if (!this.authInitialized && this.isBrowser) {
+      this.markUserHasTriedLogin();
+      await this.initializeAuth();
+    }
+  }
+
   async signOut(): Promise<void> {
     this.isLoading.set(true);
     try {
       const firebaseAuth = await this.firebaseService.getAuth();
-      
-      if (firebaseAuth) {
-        const { signOut } = await import('firebase/auth');
-        await signOut(firebaseAuth);
+      const authMethods = await this.firebaseService.getAuthMethods();
+
+      if (firebaseAuth && authMethods) {
+        await authMethods.signOut(firebaseAuth);
         // User state will be updated via onAuthStateChanged listener
       } else {
         // Fallback to mock sign-out for development
@@ -113,13 +156,14 @@ export class UserService {
   }
 
   private async checkUserRole(uid: string): Promise<UserRole> {
+    console.log('Checking role for UID:', uid);
     try {
       const firebaseDatabase = await this.firebaseService.getDatabase();
-      
-      if (firebaseDatabase) {
-        const { ref, get } = await import('firebase/database');
-        const adminRef = ref(firebaseDatabase, `admins/${uid}`);
-        const snapshot = await get(adminRef);
+      const dbMethods = await this.firebaseService.getDatabaseMethods();
+
+      if (firebaseDatabase && dbMethods) {
+        const adminRef = dbMethods.ref(firebaseDatabase, `admins/${uid}`);
+        const snapshot = await dbMethods.get(adminRef);
         return snapshot.exists() ? 'admin' : 'user';
       } else {
         // Fallback to mock role checking for development
