@@ -35,7 +35,10 @@
           class="form-input"
           placeholder="Enter notification title"
         />
-        <app-validation-errors [errors]="notificationForm.title().errors()" />
+        <app-validation-errors 
+          [field]="notificationForm.title" 
+          [submitted]="formSubmitted()"
+        />
       </div>
 
       <div class="form-field">
@@ -47,7 +50,10 @@
           class="form-input"
           placeholder="url-friendly-slug"
         />
-        <app-validation-errors [errors]="notificationForm.slug().errors()" />
+        <app-validation-errors 
+          [field]="notificationForm.slug" 
+          [submitted]="formSubmitted()"
+        />
       </div>
 
       <div class="form-field">
@@ -58,7 +64,10 @@
           [field]="notificationForm.datetime"
           class="form-input"
         />
-        <app-validation-errors [errors]="notificationForm.datetime().errors()" />
+        <app-validation-errors 
+          [field]="notificationForm.datetime" 
+          [submitted]="formSubmitted()"
+        />
       </div>
 
       <div class="form-field">
@@ -70,7 +79,10 @@
           rows="6"
           placeholder="Enter detailed description of the notification"
         ></textarea>
-        <app-validation-errors [errors]="notificationForm.description().errors()" />
+        <app-validation-errors 
+          [field]="notificationForm.description" 
+          [submitted]="formSubmitted()"
+        />
       </div>
 
       <div class="form-field">

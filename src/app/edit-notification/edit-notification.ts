@@ -64,6 +64,9 @@ export class EditNotification implements OnInit {
   protected readonly selectedProducts = signal<string[]>([]);
   protected readonly originalSlug = signal<string>('');
 
+  // Track form submission for validation
+  protected readonly formSubmitted = signal(false);
+
   // Signal Form setup
   protected notificationData = linkedSignal<NotificationFormData>(() => ({
     title: '',
@@ -146,6 +149,9 @@ export class EditNotification implements OnInit {
 
   protected async onSubmit(event: Event): Promise<void> {
     event.preventDefault();
+
+    // Mark form as submitted for validation display
+    this.formSubmitted.set(true);
 
     if (this.selectedProducts().length === 0) {
       return;

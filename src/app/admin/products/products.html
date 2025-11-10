@@ -29,7 +29,10 @@
             class="form-input"
             placeholder="My Awesome Product"
           />
-          <app-validation-errors [errors]="addProductForm.name().errors()" />
+          <app-validation-errors 
+            [field]="addProductForm.name"
+            [submitted]="addFormSubmitted()"
+          />
         </div>
 
         <div class="form-field">
@@ -44,7 +47,10 @@
             class="form-input"
             placeholder="my-awesome-product"
           />
-          <app-validation-errors [errors]="addProductForm.slug().errors()" />
+          <app-validation-errors 
+            [field]="addProductForm.slug"
+            [submitted]="addFormSubmitted()"
+          />
         </div>
       </div>
 
@@ -57,7 +63,10 @@
           class="form-textarea"
           placeholder="A comprehensive description of what this product does..."
         ></textarea>
-        <app-validation-errors [errors]="addProductForm.description().errors()" />
+        <app-validation-errors 
+          [field]="addProductForm.description"
+          [submitted]="addFormSubmitted()"
+        />
       </div>
 
       <div class="form-actions">
@@ -113,7 +122,10 @@
                   [field]="editProductForm.name"
                   class="form-input"
                 />
-                <app-validation-errors [errors]="editProductForm.name().errors()" />
+                <app-validation-errors 
+                  [field]="editProductForm.name"
+                  [submitted]="editFormSubmitted()"
+                />
               </div>
 
               <div class="form-field">
@@ -124,7 +136,10 @@
                   [field]="editProductForm.slug"
                   class="form-input"
                 />
-                <app-validation-errors [errors]="editProductForm.slug().errors()" />
+                <app-validation-errors 
+                  [field]="editProductForm.slug"
+                  [submitted]="editFormSubmitted()"
+                />
               </div>
             </div>
 
@@ -135,7 +150,10 @@
                 [field]="editProductForm.description"
                 class="form-textarea"
               ></textarea>
-              <app-validation-errors [errors]="editProductForm.description().errors()" />
+              <app-validation-errors 
+                [field]="editProductForm.description"
+                [submitted]="editFormSubmitted()"
+              />
             </div>
 
             <div class="form-actions">

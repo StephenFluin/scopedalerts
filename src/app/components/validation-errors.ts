@@ -4,7 +4,7 @@ import { ValidationError } from '@angular/forms/signals';
 @Component({
   selector: 'app-validation-errors',
   template: `
-    @if (errorMessages().length > 0) {
+    @if (shouldShowErrors()) {
     <div class="validation-errors">
       @for(message of errorMessages(); track message) {
       <div>{{ message }}</div>
@@ -29,9 +29,31 @@ import { ValidationError } from '@angular/forms/signals';
   `,
 })
 export class ValidationErrorsComponent {
-  errors = input.required<ValidationError[]>();
+  field = input<any>(); // The field signal or field state from the form
+  submitted = input<boolean>(false);
 
-  errorMessages = computed(() => toErrorMessages(this.errors()));
+  private fieldState = computed(() => {
+    const field = this.field();
+    if (!field) return null;
+    // Check if it's a function (field signal) or direct field state
+    return typeof field === 'function' ? field() : field;
+  });
+  
+  errorMessages = computed(() => {
+    const fieldState = this.fieldState();
+    return fieldState ? toErrorMessages(fieldState.errors()) : [];
+  });
+  
+  shouldShowErrors = computed(() => {
+    const fieldState = this.fieldState();
+    if (!fieldState) return false;
+    
+    const hasErrors = fieldState.errors().length > 0;
+    const isFieldTouched = fieldState.touched();
+    const isFormSubmitted = this.submitted();
+    
+    return hasErrors && (isFieldTouched || isFormSubmitted);
+  });
 }
 
 function toErrorMessages(errors: ValidationError[]): string[] {
