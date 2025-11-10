@@ -50,8 +50,6 @@ export class FirebaseService {
       this.auth = getAuth(this.firebaseApp);
       this.database = getDatabase(this.firebaseApp);
       this.initialized = true;
-
-      console.error('Firebase initialized successfully');
     } catch (error) {
       console.error('Firebase initialization failed:', error);
       throw error;

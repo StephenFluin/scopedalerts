@@ -18,7 +18,6 @@ export class AnalyticsService {
   private isInitialized = false;
 
   constructor() {
-    console.log('AnalyticsService initialized');
     this.initializeGoogleAnalytics();
     this.trackRouteChanges();
   }
