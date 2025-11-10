@@ -135,7 +135,7 @@ export class EditNotification implements OnInit {
         // Set default datetime to current time for new notifications
         const now = new Date();
         const defaultDatetime = new DatePipe('en-US').transform(now, 'yyyy-MM-ddTHH:mm') || '';
-        
+
         this.notificationData.update((data) => ({
           ...data,
           datetime: defaultDatetime,
