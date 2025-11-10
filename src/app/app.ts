@@ -22,11 +22,4 @@ import { ThemeService } from './services/theme.service';
   `,
   imports: [RouterOutlet, Navigation, Footer, ToastContainer],
 })
-export class App implements OnInit {
-  private themeService = inject(ThemeService);
-
-  ngOnInit(): void {
-    // Theme service is initialized automatically through DI
-    // This ensures the theme is applied on app startup
-  }
-}
+export class App {}
