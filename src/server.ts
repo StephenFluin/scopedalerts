@@ -69,7 +69,7 @@ app.get('/rss', async (req, res) => {
             }))
             .filter((notification) => {
               if (productSlugs.length === 0) return true;
-              return notification.affectedProducts.some((product: string) =>
+              return notification.affectedProducts?.some((product: string) =>
                 productSlugs.includes(product)
               );
             })
@@ -88,12 +88,6 @@ app.get('/rss', async (req, res) => {
 
     // Filter notifications based on products if specified
     let filteredNotifications = notifications;
-
-    if (productSlugs.length > 0) {
-      filteredNotifications = notifications.filter((notification: any) =>
-        notification.affectedProducts.some((product: string) => productSlugs.includes(product))
-      );
-    }
 
     const rssXml = generateRSSFeed(filteredNotifications, productSlugs);
 
