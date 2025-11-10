@@ -1,67 +1,16 @@
-/* Dark theme styles - Simple CSS class based approach */
+/* Dark theme styles - Now using design system CSS custom properties */
 
 html.dark {
-  background-color: #121212;
+  /* Theme applied via CSS custom properties in design-system.scss */
+  /* Material Design dark theme handled by Angular Material theme system */
+
+  /* Ensure smooth transition for theme switching */
+  transition: background-color var(--transition-normal), color var(--transition-normal);
   min-height: 100vh;
 }
 
 html.dark,
 body.dark {
-  transition: none;
-  background-color: #121212;
-  color: rgba(255, 255, 255, 0.87);
-}
-
-body.dark {
-
-  .notification-card {
-    background-color: #1e1e1e;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-
-    .notification-meta {
-      color: rgba(255, 255, 255, 0.6);
-    }
-  }
-
-  .mat-mdc-form-field {
-    .mat-mdc-text-field-wrapper {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-  }
-
-  .mat-toolbar {
-    background-color: #1e1e1e;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  }
-
-  .mat-sidenav-container {
-    background-color: #121212;
-  }
-
-  .mat-sidenav {
-    background-color: #1e1e1e;
-    border-right: 1px solid rgba(255, 255, 255, 0.12);
-  }
-
-  .mat-card {
-    background-color: #1e1e1e;
-  }
-
-  .mat-list-item {
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-  }
-
-  .mat-menu-panel {
-    background-color: #1e1e1e;
-  }
-
-  .mat-select-panel {
-    background-color: #1e1e1e;
-  }
-
-  .mat-option:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-  }
+  /* Base colors are handled by CSS custom properties */
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }

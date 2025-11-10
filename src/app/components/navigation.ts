@@ -10,67 +10,76 @@ import { ToastService } from '../services/toast.service';
   templateUrl: './navigation.html',
   styles: `
     .navbar {
-      background-color: white;
-      border-bottom: 1px solid #e0e0e0;
-      padding: 0 16px;
+      background-color: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 var(--spacing-lg);
       position: sticky;
       top: 0;
       z-index: 100;
-    }
-
-    :host-context(body.dark) .navbar {
-      background-color: #1e1e1e;
-      border-bottom-color: rgba(255, 255, 255, 0.12);
+      transition: background-color var(--transition-normal), border-color var(--transition-normal);
     }
 
     .nav-content {
-      max-width: 1200px;
+      max-width: var(--max-width-page);
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      height: 64px;
+      height: var(--navbar-height);
     }
 
-    .nav-brand {
-      h1 {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #3f51b5;
-      }
-      
-      .brand-link {
-        text-decoration: none;
-        color: inherit;
-      }
+    .nav-brand h1 {
+      margin: 0;
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-primary-600);
+    }
+    
+    .nav-brand .brand-link {
+      text-decoration: none;
+      color: inherit;
+    }
+    
+    .nav-brand .brand-link:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+      border-radius: var(--radius-sm);
     }
 
     .nav-actions {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: var(--spacing-lg);
     }
 
     .theme-toggle {
-      background: none;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 8px 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-sm) var(--spacing-md);
+      border: none;
+      border-radius: var(--button-radius);
+      font-size: var(--font-size-xl);
+      font-weight: var(--button-font-weight);
+      text-decoration: none;
       cursor: pointer;
-      font-size: 1.2rem;
-      
-      &:hover {
-        background-color: #f5f5f5;
-      }
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      background-color: transparent;
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border-strong);
+      min-width: auto;
     }
-
-    :host-context(body.dark) .theme-toggle {
-      border-color: rgba(255, 255, 255, 0.12);
-      
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.05);
-      }
+    
+    .theme-toggle:hover:not(:disabled) {
+      background-color: var(--color-hover-light);
+      border-color: var(--color-border-focus);
+    }
+    
+    .theme-toggle:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
     }
 
     .user-section {
@@ -79,103 +88,125 @@ import { ToastService } from '../services/toast.service';
     }
 
     .login-btn {
-      background-color: #3f51b5;
-      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: var(--button-padding-md);
       border: none;
-      border-radius: 8px;
-      padding: 8px 16px;
+      border-radius: var(--button-radius);
+      font-size: var(--font-size-base);
+      font-weight: var(--button-font-weight);
+      text-decoration: none;
       cursor: pointer;
-      font-weight: 500;
-      
-      &:hover:not(:disabled) {
-        background-color: #303f9f;
-      }
-      
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      background-color: var(--color-primary-600);
+      color: white;
+    }
+    
+    .login-btn:hover:not(:disabled) {
+      background-color: var(--color-primary-700);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .login-btn:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+    
+    .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
     }
 
     .user-info {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: var(--spacing-md);
     }
 
     .user-name {
-      font-weight: 500;
-      color: rgba(0, 0, 0, 0.87);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
       cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 4px;
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
       user-select: none;
-      
-      &:hover {
-        background-color: rgba(0, 0, 0, 0.04);
-      }
-      
-      &:active {
-        background-color: rgba(0, 0, 0, 0.08);
-      }
+      transition: background-color var(--transition-fast);
     }
-
-    :host-context(body.dark) .user-name {
-      color: rgba(255, 255, 255, 0.87);
-      
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.04);
-      }
-      
-      &:active {
-        background-color: rgba(255, 255, 255, 0.08);
-      }
+    
+    .user-name:hover {
+      background-color: var(--color-hover-light);
+    }
+    
+    .user-name:active {
+      background-color: var(--color-active-light);
+    }
+    
+    .user-name:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
     }
 
     .logout-btn {
-      background: none;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 6px 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-xs) var(--spacing-md);
+      border: none;
+      border-radius: var(--button-radius);
+      font-size: var(--font-size-base);
+      font-weight: var(--button-font-weight);
+      text-decoration: none;
       cursor: pointer;
-      color: rgba(0, 0, 0, 0.87);
-      
-      &:hover:not(:disabled) {
-        background-color: #f5f5f5;
-      }
-      
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      background-color: transparent;
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border-strong);
     }
-
-    :host-context(body.dark) .logout-btn {
-      border-color: rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.87);
-      
-      &:hover:not(:disabled) {
-        background-color: rgba(255, 255, 255, 0.05);
-      }
+    
+    .logout-btn:hover:not(:disabled) {
+      background-color: var(--color-hover-light);
+      border-color: var(--color-border-focus);
+    }
+    
+    .logout-btn:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+    
+    .logout-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
     }
 
     @media (max-width: 768px) {
       .nav-content {
-        padding: 0 8px;
+        padding: 0 var(--spacing-sm);
       }
       
       .nav-brand h1 {
-        font-size: 1.25rem;
+        font-size: var(--font-size-xl);
       }
       
       .user-info {
         flex-direction: column;
         align-items: flex-end;
-        gap: 4px;
+        gap: var(--spacing-xs);
       }
       
       .user-name {
-        font-size: 0.875rem;
+        font-size: var(--font-size-sm);
+      }
+      
+      .nav-actions {
+        gap: var(--spacing-md);
       }
     }
   `,

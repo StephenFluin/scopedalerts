@@ -1,37 +1,12 @@
 /* You can add global styles to this file, and also import other style files */
 
-// Angular Material theme - must come first
-@use '@angular/material' as mat;
-@use './app/styles/dark.scss';
+// Import design system first
+@use './app/styles/design-system.scss';
 
 // Import Google Fonts
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
 
-@include mat.core();
-
-// Define the light theme
-$primary-palette: mat.m2-define-palette(mat.$m2-indigo-palette);
-$accent-palette: mat.m2-define-palette(mat.$m2-pink-palette, A200, A100, A400);
-$warn-palette: mat.m2-define-palette(mat.$m2-red-palette);
-
-$light-theme: mat.m2-define-light-theme(
-  (
-    color: (
-      primary: $primary-palette,
-      accent: $accent-palette,
-      warn: $warn-palette,
-    ),
-    typography:
-      mat.m2-define-typography-config(
-        $font-family: 'Inter, sans-serif',
-      ),
-    density: 0,
-  )
-);
-
-@include mat.all-component-themes($light-theme);
-
-// Global styles
+// Base styles
 * {
   box-sizing: border-box;
 }
@@ -41,11 +16,12 @@ body {
   height: 100%;
   min-height: 100vh;
   margin: 0;
-  font-family: 'Inter', sans-serif;
-  background-color: #fafafa;
-  color: rgba(0, 0, 0, 0.87);
+  font-family: var(--font-family-base);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
 }
 
+// Layout Components
 .app-container {
   min-height: 100vh;
   display: flex;
@@ -54,88 +30,399 @@ body {
 
 .main-content {
   flex: 1;
-  padding: 16px;
-  max-width: 1200px;
+  padding: var(--spacing-lg);
+  max-width: var(--max-width-page);
   margin: 0 auto;
   width: 100%;
 }
 
-// Loading spinner styles
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 32px;
+.page-content {
+  max-width: var(--max-width-content);
+  margin: 0 auto;
+  padding: var(--spacing-lg);
 }
 
-// Card styles
-.notification-card {
-  margin-bottom: 16px;
+// Card Components
+.card {
+  background-color: var(--color-surface);
+  border: var(--card-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  box-shadow: var(--shadow-sm);
 
-  .mat-mdc-card-header {
-    padding-bottom: 8px;
+  &.card-lg {
+    padding: var(--spacing-xl);
+  }
+}
+
+.notification-card {
+  @extend .card;
+  margin-bottom: var(--spacing-lg);
+
+  .notification-title {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+
+    a {
+      text-decoration: none;
+      color: inherit;
+
+      &:hover {
+        color: var(--color-link);
+      }
+
+      &:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+      }
+    }
   }
 
   .notification-meta {
-    font-size: 0.875rem;
-    color: rgba(0, 0, 0, 0.6);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-md);
   }
 
-  .notification-preview {
-    margin-top: 8px;
-    opacity: 0.8;
+  .notification-description {
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-base);
+    margin-bottom: var(--spacing-md);
   }
 }
 
-// Button styles
-.fab-button {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 100;
-}
-
-// Form styles
+// Form Components
 .form-container {
-  max-width: 800px;
+  max-width: var(--max-width-content);
   margin: 0 auto;
 
-  .mat-mdc-form-field {
-    width: 100%;
-    margin-bottom: 16px;
+  .form-field {
+    margin-bottom: var(--spacing-xl);
+
+    label {
+      display: block;
+      margin-bottom: var(--spacing-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-primary);
+      font-size: var(--font-size-base);
+    }
+
+    .field-description {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      margin-top: var(--spacing-xs);
+    }
+
+    .error-message {
+      color: var(--color-error);
+      font-size: var(--font-size-sm);
+      margin-top: var(--spacing-xs);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-xs);
+    }
   }
 
   .form-actions {
     display: flex;
-    gap: 16px;
+    gap: var(--spacing-lg);
     justify-content: flex-end;
-    margin-top: 24px;
+    margin-top: var(--spacing-2xl);
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid var(--color-border);
   }
 }
 
-// Filter styles
-.product-filter {
-  margin-bottom: 24px;
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: var(--form-field-padding);
+  border: var(--form-field-border);
+  border-radius: var(--form-field-radius);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
 
-  .filter-chips {
+  &:focus {
+    outline: none;
+    border-color: var(--color-link);
+    box-shadow: var(--focus-ring);
+  }
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: var(--line-height-base);
+}
+
+// Native button and link styling
+button,
+input[type='button'],
+input[type='submit'],
+a[role='button'],
+.header-btn,
+.login-btn,
+.logout-btn,
+.edit-btn,
+.save-btn,
+.cancel-btn,
+.delete-btn,
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+// Primary button style (save, submit actions)
+button[type='submit'],
+.save-btn {
+  background-color: var(--color-primary);
+  color: white;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+  }
+}
+
+// Secondary button style (edit, navigation)
+.edit-btn,
+.header-btn,
+.login-btn {
+  background-color: var(--color-primary);
+  color: white;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+  }
+}
+
+// Neutral/cancel button style
+.cancel-btn,
+.logout-btn,
+.back-btn {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-gray-100);
+  }
+}
+
+// Danger button style
+.delete-btn {
+  background-color: var(--color-error);
+  color: white;
+
+  &:hover:not(:disabled) {
+    background-color: #d32f2f;
+  }
+}
+
+// Tags/Chips
+.tag,
+.product-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+  background-color: var(--color-gray-100);
+  color: var(--color-text-secondary);
+}
+
+html.dark {
+  .tag,
+  .product-tag {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-secondary);
+  }
+}
+
+// Navigation and Header Components
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+
+  a {
+    color: var(--color-link);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      @extend .focus-visible;
+    }
+  }
+
+  .separator {
+    color: var(--color-text-muted);
+  }
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+
+  h1 {
+    margin: 0;
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    line-height: var(--line-height-tight);
+  }
+
+  .header-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 8px;
+    gap: var(--spacing-md);
+    flex-shrink: 0;
   }
 }
 
-// Responsive design
+// Utility Components
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-4xl) var(--spacing-lg);
+  text-align: center;
+
+  .loading-spinner {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-4xl) var(--spacing-lg);
+  color: var(--color-text-muted);
+}
+
+.error-container {
+  @extend .empty-state;
+
+  h1 {
+    color: var(--color-error-600);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  p {
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-xl);
+  }
+}
+
+// RSS/Feed Styling
+.rss-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-error);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-md);
+
+  &:hover {
+    background-color: rgba(244, 67, 54, 0.1);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  .rss-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+}
+
+// Responsive Design
 @media (max-width: 768px) {
-  .main-content {
-    padding: 8px;
+  .main-content,
+  .page-content {
+    padding: var(--spacing-sm);
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .header-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    h1 {
+      font-size: var(--font-size-2xl);
+    }
   }
 
   .form-actions {
     flex-direction: column;
 
-    button {
+    .btn {
       width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .notification-card {
+    .notification-meta {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
     }
   }
 }

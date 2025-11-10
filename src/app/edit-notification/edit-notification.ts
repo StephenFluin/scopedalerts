@@ -69,9 +69,9 @@ const notificationSchema = schema<NotificationFormData>((path) => {
   templateUrl: './edit-notification.html',
   styles: `
     .edit-notification-container {
-      max-width: 800px;
+      max-width: var(--max-width-content);
       margin: 0 auto;
-      padding: 16px;
+      padding: var(--spacing-lg);
     }
 
     .loading-container,
@@ -80,293 +80,337 @@ const notificationSchema = schema<NotificationFormData>((path) => {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 64px 16px;
+      padding: var(--spacing-4xl) var(--spacing-lg);
       text-align: center;
     }
 
-    .error-container {
-      h1 {
-        color: #f44336;
-        margin-bottom: 16px;
-      }
-      
-      p {
-        color: rgba(0, 0, 0, 0.6);
-        margin-bottom: 24px;
-      }
+    .error-container h1 {
+      color: var(--color-error-600);
+      margin-bottom: var(--spacing-lg);
     }
-
-    :host-context(body.dark) .error-container p {
-      color: rgba(255, 255, 255, 0.6);
+    
+    .error-container p {
+      color: var(--color-text-muted);
+      margin-bottom: var(--spacing-xl);
     }
 
     .breadcrumb {
-      margin-bottom: 16px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-lg);
+      font-size: var(--font-size-sm);
+    }
+    
+    .breadcrumb .separator {
+      color: var(--color-text-muted);
     }
 
     .breadcrumb-link {
-      color: #3f51b5;
+      color: var(--color-link);
       text-decoration: none;
-      font-weight: 500;
-      
-      &:hover {
-        text-decoration: underline;
-      }
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .breadcrumb-link:hover {
+      text-decoration: underline;
+    }
+    
+    .breadcrumb-link:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
     }
 
     .breadcrumb-separator {
-      color: rgba(0, 0, 0, 0.4);
-    }
-
-    :host-context(body.dark) .breadcrumb-separator {
-      color: rgba(255, 255, 255, 0.4);
+      color: var(--color-text-muted);
     }
 
     .form-header {
-      margin-bottom: 32px;
-      
-      h1 {
-        margin: 0;
-        font-size: 2rem;
-        font-weight: 700;
-        color: rgba(0, 0, 0, 0.87);
-      }
+      margin-bottom: var(--spacing-3xl);
     }
-
-    :host-context(body.dark) .form-header h1 {
-      color: rgba(255, 255, 255, 0.87);
+    
+    .form-header h1 {
+      margin: 0;
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
     }
 
     .notification-form {
-      background-color: white;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 24px;
-    }
-
-    :host-context(body.dark) .notification-form {
-      background-color: #1e1e1e;
-      border-color: rgba(255, 255, 255, 0.12);
+      background-color: var(--card-background);
+      border: var(--card-border);
+      border-radius: var(--card-radius);
+      padding: var(--card-padding-lg);
+      box-shadow: var(--card-shadow);
     }
 
     .form-section {
-      margin-bottom: 32px;
+      margin-bottom: var(--spacing-3xl);
     }
 
     .form-field {
-      margin-bottom: 24px;
-      
-      label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: rgba(0, 0, 0, 0.87);
-      }
+      margin-bottom: var(--spacing-xl);
     }
-
-    :host-context(body.dark) .form-field label {
-      color: rgba(255, 255, 255, 0.87);
+    
+    .form-field label {
+      display: block;
+      margin-bottom: var(--spacing-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      font-size: var(--font-size-base);
+    }
+    
+    .form-field .field-description {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      margin-top: var(--spacing-xs);
+    }
+    
+    .form-field .error-message {
+      color: var(--color-error-600);
+      font-size: var(--font-size-sm);
+      margin-top: var(--spacing-xs);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-xs);
     }
 
     .form-input,
     .form-textarea {
       width: 100%;
-      padding: 12px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 1rem;
+      padding: var(--form-field-padding);
+      border: var(--form-field-border);
+      border-radius: var(--form-field-radius);
+      font-size: var(--font-size-base);
       font-family: inherit;
-      background-color: white;
-      color: rgba(0, 0, 0, 0.87);
-      transition: border-color 0.2s ease;
-      
-      &:focus {
-        outline: none;
-        border-color: #3f51b5;
-      }
-      
-      &::placeholder {
-        color: rgba(0, 0, 0, 0.4);
-      }
+      background-color: var(--form-field-background);
+      color: var(--color-text-primary);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     }
-
-    :host-context(body.dark) .form-input,
-    :host-context(body.dark) .form-textarea {
-      background-color: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.87);
-      
-      &::placeholder {
-        color: rgba(255, 255, 255, 0.4);
-      }
+    
+    .form-input:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--color-border-focus);
+      box-shadow: var(--focus-ring);
+    }
+    
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+      color: var(--color-text-placeholder);
+    }
+    
+    .form-input:disabled,
+    .form-textarea:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .form-textarea {
       resize: vertical;
       min-height: 120px;
+      line-height: var(--line-height-relaxed);
     }
 
     .products-selection {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding: 12px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      background-color: #f9f9f9;
-    }
-
-    :host-context(body.dark) .products-selection {
-      background-color: rgba(255, 255, 255, 0.02);
-      border-color: rgba(255, 255, 255, 0.12);
+      gap: var(--spacing-md);
+      padding: var(--spacing-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background-color: var(--color-surface-variant);
     }
 
     .product-checkbox {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: var(--spacing-md);
       cursor: pointer;
-      padding: 8px;
-      border-radius: 4px;
-      
-      &:hover {
-        background-color: rgba(0, 0, 0, 0.02);
-      }
-      
-      input[type="checkbox"] {
-        margin-top: 2px;
-        flex-shrink: 0;
-      }
+      padding: var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      transition: background-color var(--transition-fast);
+    }
+    
+    .product-checkbox:hover {
+      background-color: var(--color-hover-light);
+    }
+    
+    .product-checkbox:focus-within {
+      background-color: var(--color-hover-light);
+    }
+    
+    .product-checkbox input[type="checkbox"] {
+      margin-top: 2px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    
+    .product-checkbox input[type="checkbox"]:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
     }
 
-    :host-context(body.dark) .product-checkbox {
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.02);
-      }
+    .product-info {
+      flex: 1;
     }
 
     .product-name {
-      font-weight: 600;
-      color: rgba(0, 0, 0, 0.87);
-      margin-bottom: 2px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-xs);
+      font-size: var(--font-size-base);
     }
 
     .product-description {
-      font-size: 0.875rem;
-      color: rgba(0, 0, 0, 0.6);
-      line-height: 1.4;
-    }
-
-    :host-context(body.dark) .product-name {
-      color: rgba(255, 255, 255, 0.87);
-    }
-
-    :host-context(body.dark) .product-description {
-      color: rgba(255, 255, 255, 0.6);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      line-height: var(--line-height-base);
     }
 
     .error-message {
-      color: #f44336;
-      font-size: 0.875rem;
-      margin-top: 4px;
+      color: var(--color-error-600);
+      font-size: var(--font-size-sm);
+      margin-top: var(--spacing-xs);
     }
 
     .form-actions {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      padding-top: 24px;
-      border-top: 1px solid #e0e0e0;
-    }
-
-    :host-context(body.dark) .form-actions {
-      border-top-color: rgba(255, 255, 255, 0.12);
+      gap: var(--spacing-lg);
+      justify-content: flex-end;
+      margin-top: var(--spacing-2xl);
+      padding-top: var(--spacing-xl);
+      border-top: 1px solid var(--color-border);
     }
 
     .primary-actions {
       display: flex;
-      gap: 12px;
+      gap: var(--spacing-md);
     }
 
     .cancel-btn {
-      background: none;
-      border: 1px solid #e0e0e0;
-      color: rgba(0, 0, 0, 0.87);
-      padding: 10px 20px;
-      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: var(--button-padding-md);
+      border: none;
+      border-radius: var(--button-radius);
+      font-size: var(--font-size-base);
+      font-weight: var(--button-font-weight);
+      text-decoration: none;
       cursor: pointer;
-      font-weight: 500;
-      
-      &:hover:not(:disabled) {
-        background-color: #f5f5f5;
-      }
-      
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      background-color: transparent;
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border-strong);
     }
-
-    :host-context(body.dark) .cancel-btn {
-      border-color: rgba(255, 255, 255, 0.12);
-      color: rgba(255, 255, 255, 0.87);
-      
-      &:hover:not(:disabled) {
-        background-color: rgba(255, 255, 255, 0.05);
-      }
+    
+    .cancel-btn:hover:not(:disabled) {
+      background-color: var(--color-hover-light);
+      border-color: var(--color-border-focus);
+    }
+    
+    .cancel-btn:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+    
+    .cancel-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
     }
 
     .save-btn {
-      background-color: #3f51b5;
-      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: var(--button-padding-md);
       border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
+      border-radius: var(--button-radius);
+      font-size: var(--font-size-base);
+      font-weight: var(--button-font-weight);
+      text-decoration: none;
       cursor: pointer;
-      font-weight: 500;
-      
-      &:hover:not(:disabled) {
-        background-color: #303f9f;
-      }
-      
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      background-color: var(--color-primary-600);
+      color: white;
+    }
+    
+    .save-btn:hover:not(:disabled) {
+      background-color: var(--color-primary-700);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .save-btn:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+    
+    .save-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
     }
 
     .delete-btn {
-      background-color: #f44336;
-      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: var(--button-padding-md);
       border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
+      border-radius: var(--button-radius);
+      font-size: var(--font-size-base);
+      font-weight: var(--button-font-weight);
+      text-decoration: none;
       cursor: pointer;
-      font-weight: 500;
-      
-      &:hover:not(:disabled) {
-        background-color: #d32f2f;
-      }
-      
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      background-color: var(--color-error-600);
+      color: white;
+    }
+    
+    .delete-btn:hover:not(:disabled) {
+      background-color: var(--color-error-700);
+    }
+    
+    .delete-btn:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+    
+    .delete-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
     }
 
     .back-btn {
-      color: #666;
+      display: inline-flex;
+      align-items: center;
+      color: var(--color-text-muted);
       text-decoration: none;
-      font-weight: 500;
-      
-      &:hover {
-        color: #3f51b5;
-        text-decoration: underline;
-      }
+      font-size: var(--font-size-base);
+      font-weight: var(--button-font-weight);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .back-btn:hover:not(:disabled) {
+      color: var(--color-link);
+      text-decoration: underline;
+    }
+    
+    .back-btn:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
     }
 
     .delete-modal-overlay {
@@ -380,51 +424,46 @@ const notificationSchema = schema<NotificationFormData>((path) => {
       align-items: center;
       justify-content: center;
       z-index: 1000;
+      backdrop-filter: blur(2px);
     }
 
     .delete-modal {
-      background-color: white;
-      padding: 24px;
-      border-radius: 8px;
+      background-color: var(--card-background);
+      border: var(--card-border);
+      border-radius: var(--card-radius);
+      padding: var(--card-padding-lg);
+      box-shadow: var(--card-shadow);
       max-width: 400px;
       width: 90%;
-      
-      h3 {
-        margin: 0 0 16px 0;
-        color: #f44336;
-      }
-      
-      p {
-        margin: 0 0 24px 0;
-        color: rgba(0, 0, 0, 0.7);
-      }
+      margin: var(--spacing-lg);
     }
-
-    :host-context(body.dark) .delete-modal {
-      background-color: #1e1e1e;
-      
-      p {
-        color: rgba(255, 255, 255, 0.7);
-      }
+    
+    .delete-modal h3 {
+      margin: 0 0 var(--spacing-lg) 0;
+      color: var(--color-error-600);
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-semibold);
+    }
+    
+    .delete-modal p {
+      margin: 0 0 var(--spacing-2xl) 0;
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-relaxed);
     }
 
     .modal-actions {
       display: flex;
-      gap: 12px;
+      gap: var(--spacing-md);
       justify-content: flex-end;
     }
 
     @media (max-width: 768px) {
       .edit-notification-container {
-        padding: 8px;
-      }
-      
-      .notification-form {
-        padding: 16px;
+        padding: var(--spacing-sm);
       }
       
       .form-header h1 {
-        font-size: 1.5rem;
+        font-size: var(--font-size-2xl);
       }
       
       .form-actions {
@@ -434,32 +473,34 @@ const notificationSchema = schema<NotificationFormData>((path) => {
         .primary-actions {
           order: 2;
           width: 100%;
-          
-          button {
-            flex: 1;
-          }
+        }
+        
+        .primary-actions .cancel-btn,
+        .primary-actions .save-btn {
+          flex: 1;
         }
         
         .dangerous-actions {
           order: 1;
           width: 100%;
-          margin-bottom: 16px;
-          
-          button {
-            width: 100%;
-          }
+          margin-bottom: var(--spacing-lg);
+        }
+        
+        .dangerous-actions .delete-btn {
+          width: 100%;
         }
       }
       
       .delete-modal {
-        margin: 16px;
+        margin: var(--spacing-lg);
         
         .modal-actions {
           flex-direction: column;
-          
-          button {
-            width: 100%;
-          }
+        }
+        
+        .modal-actions .cancel-btn,
+        .modal-actions .delete-btn {
+          width: 100%;
         }
       }
     }

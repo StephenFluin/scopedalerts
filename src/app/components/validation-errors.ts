@@ -14,13 +14,17 @@ import { ValidationError } from '@angular/forms/signals';
   `,
   styles: `
     .validation-errors {
-      color: #f44336;
-      font-size: 0.875rem;
-      margin-top: 4px;
+      color: var(--color-error-600);
+      font-size: var(--font-size-sm);
+      margin-top: var(--spacing-xs);
     }
     
     .validation-errors div {
-      margin-bottom: 2px;
+      margin-bottom: var(--spacing-xs);
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
     }
   `,
 })

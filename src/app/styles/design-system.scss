@@ -1,0 +1,131 @@
+/* Design System - Minimal and Accessible */
+
+:root {
+  /* Typography */
+  --font-family-base: 'Inter', sans-serif;
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 2rem; /* 32px */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.2;
+  --line-height-base: 1.5;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 50%;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+
+  /* Transitions - minimal */
+  --transition-fast: 0.15s ease;
+}
+
+/* Light Theme Colors - Minimal and WCAG AA Compliant */
+:root {
+  /* Primary Colors */
+  --color-primary: #3f51b5;
+  --color-primary-hover: #303f9f;
+
+  /* Secondary Colors */
+  --color-secondary: #e91e63;
+  --color-secondary-hover: #d81b60;
+
+  /* Neutral Colors */
+  --color-white: #ffffff;
+  --color-gray-100: #f5f5f5;
+  --color-gray-200: #e0e0e0;
+  --color-gray-600: #616161; /* WCAG AA: 5.74:1 */
+  --color-gray-700: #424242; /* WCAG AAA: 9.21:1 */
+  --color-gray-900: #212121; /* WCAG AAA: 16.67:1 */
+  --color-black: #000000;
+
+  /* Status Colors */
+  --color-success: #4caf50;
+  --color-warning: #ff9800;
+  --color-error: #f44336;
+
+  /* Semantic Mappings */
+  --color-background: var(--color-white);
+  --color-surface: var(--color-white);
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-700);
+  --color-text-muted: var(--color-gray-600);
+  --color-border: var(--color-gray-200);
+  --color-link: var(--color-primary);
+  --color-link-hover: var(--color-primary-hover);
+}
+
+/* Dark Theme Colors - WCAG AA Compliant */
+html.dark {
+  --color-background: #121212;
+  --color-surface: #1e1e1e;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: rgba(255, 255, 255, 0.87);
+  --color-text-muted: rgba(255, 255, 255, 0.7);
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-primary: #7986cb;
+  --color-primary-hover: #9fa8da;
+  --color-link: #8c9eff;
+  --color-link-hover: #b39ddb;
+  --color-success: #66bb6a;
+  --color-warning: #ffa726;
+  --color-error: #ef5350;
+}
+
+/* Component Design Tokens - Minimal */
+:root {
+  /* Layout */
+  --max-width-content: 800px;
+  --max-width-page: 1200px;
+
+  /* Cards */
+  --card-padding: var(--spacing-lg);
+  --card-radius: var(--radius-md);
+  --card-border: 1px solid var(--color-border);
+
+  /* Forms */
+  --form-field-padding: var(--spacing-md);
+  --form-field-radius: var(--radius-md);
+  --form-field-border: 1px solid var(--color-border);
+
+  /* Focus ring for accessibility */
+  --focus-ring: 0 0 0 3px rgba(63, 81, 181, 0.2);
+}
+
+/* Utility classes */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.focus-visible:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

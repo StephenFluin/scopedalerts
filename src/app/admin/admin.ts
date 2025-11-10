@@ -13,30 +13,11 @@ import { Admin as AdminModel } from '../models/admin';
     .admin-container {
       max-width: 1000px;
       margin: 0 auto;
-      padding: 16px;
+      padding: var(--spacing-lg);
     }
 
     .error-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 16px;
-      text-align: center;
-      
-      h1 {
-        color: #f44336;
-        margin-bottom: 16px;
-      }
-      
-      p {
-        color: rgba(0, 0, 0, 0.6);
-        margin-bottom: 24px;
-      }
-    }
-
-    :host-context(body.dark) .error-container p {
-      color: rgba(255, 255, 255, 0.6);
+      @extend .error-container;
     }
 
     .breadcrumb {
