@@ -72,13 +72,11 @@
       @for (notification of filteredNotifications(); track notification.id) {
       <div class="notification-card">
         <div class="notification-header">
-          <h2
-            class="notification-title"
-            [class.expanded]="expandedNotifications().includes(notification.id)"
-            (click)="toggleExpanded(notification.id)"
-          >
-            {{ notification.title }}
-          </h2>
+          <a [routerLink]="['/notifications', notification.slug]" class="notification-title-link">
+            <h2 class="notification-title">
+              {{ notification.title }}
+            </h2>
+          </a>
           <div class="notification-meta">
             <span class="notification-date">
               {{ notification.datetime | date : 'medium' }}
@@ -93,13 +91,9 @@
         </div>
 
         <div class="notification-content">
-          @if (expandedNotifications().includes(notification.id)) {
-          <p class="notification-description">{{ notification.description }}</p>
-          } @else {
           <p class="notification-preview">
             {{ getPreview(notification.description) }}
           </p>
-          }
 
           <div class="notification-actions">
             <a [routerLink]="['/notifications', notification.slug]" class="view-link">

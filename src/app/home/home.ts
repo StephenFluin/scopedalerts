@@ -176,30 +176,30 @@ import { Product } from '../models/product';
       margin-bottom: 12px;
     }
 
+    .notification-title-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
     .notification-title {
       margin: 0 0 8px 0;
       font-size: 1.125rem;
       font-weight: 600;
       color: rgba(0, 0, 0, 0.87);
-      cursor: pointer;
       transition: color 0.2s ease;
-      
-      &:hover {
-        color: #3f51b5;
-      }
-      
-      &.expanded {
-        color: #3f51b5;
-      }
+    }
+
+    .notification-title-link:hover .notification-title {
+      color: #3f51b5;
     }
 
     :host-context(body.dark) .notification-title {
       color: rgba(255, 255, 255, 0.87);
-      
-      &:hover,
-      &.expanded {
-        color: #7986cb;
-      }
+    }
+
+    :host-context(body.dark) .notification-title-link:hover .notification-title {
+      color: #7986cb;
     }
 
     .notification-meta {
@@ -373,7 +373,6 @@ export class Home implements OnInit {
   protected readonly userService = inject(UserService);
 
   protected readonly selectedProductIds = signal<string[]>([]);
-  protected readonly expandedNotifications = signal<string[]>([]);
 
   protected readonly filteredNotifications = computed(() => {
     const selectedIds = this.selectedProductIds();
@@ -415,16 +414,6 @@ export class Home implements OnInit {
         return ids.filter((id) => id !== productId);
       } else {
         return [...ids, productId];
-      }
-    });
-  }
-
-  toggleExpanded(notificationId: string): void {
-    this.expandedNotifications.update((ids) => {
-      if (ids.includes(notificationId)) {
-        return ids.filter((id) => id !== notificationId);
-      } else {
-        return [...ids, notificationId];
       }
     });
   }
