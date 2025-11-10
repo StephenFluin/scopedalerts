@@ -9,15 +9,7 @@ import {
   effect,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import {
-  form,
-  required,
-  minLength,
-  submit,
-  Field,
-  schema,
-  ValidationError,
-} from '@angular/forms/signals';
+import { form, required, submit, Field, schema } from '@angular/forms/signals';
 import { DatePipe } from '@angular/common';
 import { NotificationService } from '../services/notification.service';
 import { ProductService } from '../services/product.service';
@@ -139,6 +131,15 @@ export class EditNotification implements OnInit {
             this.selectedProducts.set(notification.affectedProducts);
           }
         }
+      } else {
+        // Set default datetime to current time for new notifications
+        const now = new Date();
+        const defaultDatetime = new DatePipe('en-US').transform(now, 'yyyy-MM-ddTHH:mm') || '';
+        
+        this.notificationData.update((data) => ({
+          ...data,
+          datetime: defaultDatetime,
+        }));
       }
     } catch (error) {
       console.error('Error loading data:', error);
