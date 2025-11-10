@@ -1,0 +1,8 @@
+// Use the shared forms stylesheet
+@use '../../styles/forms.scss';
+
+// Component-specific styles
+.product-form {
+  display: grid;
+  gap: var(--spacing-xl);
+}

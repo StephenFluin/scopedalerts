@@ -41,12 +41,6 @@ import { Product } from '../models/product';
       line-height: var(--line-height-tight);
     }
 
-    .admin-actions {
-      display: flex;
-      gap: var(--spacing-md);
-      flex-shrink: 0;
-    }
-
     .header-btn {
       display: inline-flex;
       align-items: center;
@@ -217,18 +211,6 @@ import { Product } from '../models/product';
       display: flex;
       gap: var(--spacing-sm);
       flex-wrap: wrap;
-    }
-
-    .product-tag {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 12px;
-      border-radius: var(--radius-full);
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-medium);
-      line-height: 1;
-      background-color: var(--color-gray-100);
-      color: var(--color-text-secondary);
     }
 
     .notification-description {

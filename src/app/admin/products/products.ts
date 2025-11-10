@@ -52,13 +52,7 @@ const productSchema = schema<ProductFormData>((path) => {
   selector: 'app-admin-products',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './products.html',
-  styles: `
-    // Component-specific styles only
-    .product-form {
-      display: grid;
-      gap: var(--spacing-xl);
-    }
-  `,
+  styleUrls: ['./products.scss'],
   imports: [RouterLink, Field, ValidationErrorsComponent],
 })
 export class AdminProductsComponent implements OnInit {

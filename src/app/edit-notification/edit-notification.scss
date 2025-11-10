@@ -1,0 +1,49 @@
+// Use the shared forms stylesheet
+@use '../styles/forms.scss';
+
+.edit-notification-container {
+  max-width: var(--max-width-content);
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.notification-form {
+  @extend .form-card;
+}
+
+.products-selection {
+  @extend .selection-container;
+}
+
+.product-checkbox {
+  @extend .form-checkbox;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-name {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-base);
+}
+
+.product-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-base);
+}
+
+.delete-section {
+  margin-top: var(--spacing-4xl);
+  padding-top: var(--spacing-2xl);
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 768px) {
+  .edit-notification-container {
+    padding: var(--spacing-md);
+  }
+}
