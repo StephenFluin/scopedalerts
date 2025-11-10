@@ -545,7 +545,7 @@ export class EditNotification implements OnInit {
           }
         }
       } else {
-        // Set default datetime to now
+        // Set default datetime to now (in local timezone for the input)
         const now = new Date();
         const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
           .toISOString()
@@ -566,7 +566,9 @@ export class EditNotification implements OnInit {
 
   private populateForm(notification: Notice): void {
     // Convert UTC datetime to local datetime for the input
+    // The datetime from the database is in UTC ISO string format
     const utcDate = new Date(notification.datetime);
+    // Convert to local timezone for the datetime-local input
     const localDateTime = new Date(utcDate.getTime() - utcDate.getTimezoneOffset() * 60000)
       .toISOString()
       .slice(0, 16);
@@ -610,15 +612,18 @@ export class EditNotification implements OnInit {
         const formValue = form().value();
         console.log('form value:', formValue);
 
-        // Convert local datetime to UTC
+        // Convert local datetime input to UTC for storage
+        // The datetime-local input value is in format "YYYY-MM-DDTHH:mm"
+        // When we create a Date from this, it's interpreted as local time
         const localDate = new Date(formValue.datetime);
-        const utcDateTime = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000);
+        // toISOString() automatically converts to UTC
+        const utcDateTimeString = localDate.toISOString();
 
         const notificationData = {
           title: formValue.title,
           slug: formValue.slug,
           description: formValue.description,
-          datetime: utcDateTime.toISOString(),
+          datetime: utcDateTimeString,
           affectedProducts: this.selectedProducts(),
         };
 
