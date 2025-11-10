@@ -52,11 +52,11 @@
 
       <div class="form-field">
         <label for="datetime">Date & Time *</label>
-        <input 
-          type="datetime-local" 
-          id="datetime" 
-          [field]="notificationForm.datetime" 
-          class="form-input" 
+        <input
+          type="datetime-local"
+          id="datetime"
+          [field]="notificationForm.datetime"
+          class="form-input"
         />
         <app-validation-errors [errors]="notificationForm.datetime().errors()" />
       </div>

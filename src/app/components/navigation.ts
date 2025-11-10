@@ -2,6 +2,7 @@ import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { UserService } from '../services/user.service';
 import { ThemeService } from '../services/theme.service';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-navigation',
@@ -15,7 +16,6 @@ import { ThemeService } from '../services/theme.service';
       position: sticky;
       top: 0;
       z-index: 100;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
     :host-context(body.dark) .navbar {
@@ -108,10 +108,31 @@ import { ThemeService } from '../services/theme.service';
     .user-name {
       font-weight: 500;
       color: rgba(0, 0, 0, 0.87);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+      user-select: none;
+      
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+      
+      &:active {
+        background-color: rgba(0, 0, 0, 0.08);
+      }
     }
 
     :host-context(body.dark) .user-name {
       color: rgba(255, 255, 255, 0.87);
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.04);
+      }
+      
+      &:active {
+        background-color: rgba(255, 255, 255, 0.08);
+      }
     }
 
     .admin-badge {
@@ -176,6 +197,23 @@ import { ThemeService } from '../services/theme.service';
 export class Navigation {
   protected readonly userService = inject(UserService);
   protected readonly themeService = inject(ThemeService);
+  protected readonly toastService = inject(ToastService);
+
+  async copyUidToClipboard(): Promise<void> {
+    const user = this.userService.user();
+    if (!user?.uid) {
+      this.toastService.error('No user ID available');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(user.uid);
+      this.toastService.success('User ID copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy UID to clipboard:', error);
+      this.toastService.error('Failed to copy User ID');
+    }
+  }
 
   async signIn(): Promise<void> {
     try {

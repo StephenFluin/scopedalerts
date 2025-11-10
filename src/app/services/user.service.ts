@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { User, UserRole } from '../models/user';
+import { FirebaseService } from './firebase.service';
 
 @Injectable({
   providedIn: 'root',
@@ -8,11 +9,10 @@ import { User, UserRole } from '../models/user';
 export class UserService {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
+  private firebaseService = inject(FirebaseService);
 
   private currentUser = signal<User | null>(null);
   private isLoading = signal(false);
-  private firebaseAuth: any = null;
-  private firebaseDatabase: any = null;
 
   readonly user = this.currentUser.asReadonly();
   readonly loading = this.isLoading.asReadonly();
@@ -28,37 +28,33 @@ export class UserService {
 
   constructor() {
     if (this.isBrowser) {
-      this.initializeFirebase();
+      this.initializeAuth();
     }
   }
 
-  private async initializeFirebase(): Promise<void> {
+  private async initializeAuth(): Promise<void> {
     try {
-      if (this.isBrowser) {
-        const { initializeApp } = await import('firebase/app');
-        const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } =
-          await import('firebase/auth');
-        const { getDatabase, ref, get } = await import('firebase/database');
-        const { firebaseConfig } = await import('../config/firebase.config');
-
-        const app = initializeApp(firebaseConfig);
-        this.firebaseAuth = getAuth(app);
-        this.firebaseDatabase = getDatabase(app);
-
-        // Listen for auth state changes
-        onAuthStateChanged(this.firebaseAuth, async (firebaseUser) => {
-          if (firebaseUser) {
-            const role = await this.checkUserRole(firebaseUser.uid);
-            this.currentUser.set({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              displayName: firebaseUser.displayName || '',
-              role,
-            });
-          } else {
-            this.currentUser.set(null);
-          }
-        });
+      if (this.firebaseService.isBrowserEnvironment()) {
+        const firebaseAuth = await this.firebaseService.getAuth();
+        
+        if (firebaseAuth) {
+          const { onAuthStateChanged } = await import('firebase/auth');
+          
+          // Listen for auth state changes
+          onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
+            if (firebaseUser) {
+              const role = await this.checkUserRole(firebaseUser.uid);
+              this.currentUser.set({
+                uid: firebaseUser.uid,
+                email: firebaseUser.email || '',
+                displayName: firebaseUser.displayName || '',
+                role,
+              });
+            } else {
+              this.currentUser.set(null);
+            }
+          });
+        }
       }
     } catch (error) {
       console.warn('Firebase not available, using mock data:', error);
@@ -69,10 +65,12 @@ export class UserService {
   async signInWithGoogle(): Promise<void> {
     this.isLoading.set(true);
     try {
-      if (this.firebaseAuth) {
+      const firebaseAuth = await this.firebaseService.getAuth();
+      
+      if (firebaseAuth) {
         const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
         const provider = new GoogleAuthProvider();
-        await signInWithPopup(this.firebaseAuth, provider);
+        await signInWithPopup(firebaseAuth, provider);
         // User state will be updated via onAuthStateChanged listener
       } else {
         // Fallback to mock sign-in for development
@@ -95,9 +93,11 @@ export class UserService {
   async signOut(): Promise<void> {
     this.isLoading.set(true);
     try {
-      if (this.firebaseAuth) {
+      const firebaseAuth = await this.firebaseService.getAuth();
+      
+      if (firebaseAuth) {
         const { signOut } = await import('firebase/auth');
-        await signOut(this.firebaseAuth);
+        await signOut(firebaseAuth);
         // User state will be updated via onAuthStateChanged listener
       } else {
         // Fallback to mock sign-out for development
@@ -114,9 +114,11 @@ export class UserService {
 
   private async checkUserRole(uid: string): Promise<UserRole> {
     try {
-      if (this.firebaseDatabase) {
+      const firebaseDatabase = await this.firebaseService.getDatabase();
+      
+      if (firebaseDatabase) {
         const { ref, get } = await import('firebase/database');
-        const adminRef = ref(this.firebaseDatabase, `admins/${uid}`);
+        const adminRef = ref(firebaseDatabase, `admins/${uid}`);
         const snapshot = await get(adminRef);
         return snapshot.exists() ? 'admin' : 'user';
       } else {

@@ -27,14 +27,10 @@ import { ValidationError } from '@angular/forms/signals';
 export class ValidationErrorsComponent {
   errors = input.required<ValidationError[]>();
 
-  errorMessages = computed(() =>
-    toErrorMessages(this.errors())
-  );
+  errorMessages = computed(() => toErrorMessages(this.errors()));
 }
 
-function toErrorMessages(
-  errors: ValidationError[]
-): string[] {
+function toErrorMessages(errors: ValidationError[]): string[] {
   return errors.map((error) => {
     return error.message ?? toMessage(error);
   });

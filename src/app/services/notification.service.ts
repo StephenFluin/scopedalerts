@@ -1,6 +1,7 @@
 import { Injectable, signal, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Notice } from '../models/notice';
+import { FirebaseService } from './firebase.service';
 
 @Injectable({
   providedIn: 'root',
@@ -8,42 +9,26 @@ import { Notice } from '../models/notice';
 export class NotificationService {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
+  private firebaseService = inject(FirebaseService);
 
   private notifications = signal<Notice[]>([]);
   private isLoading = signal(false);
-  private firebaseDatabase: any = null;
 
   readonly allNotifications = this.notifications.asReadonly();
   readonly loading = this.isLoading.asReadonly();
 
   constructor() {
     this.loadMockData();
-    if (this.isBrowser) {
-      this.initializeFirebase();
-    }
-  }
-
-  private async initializeFirebase(): Promise<void> {
-    try {
-      if (isPlatformBrowser(this.platformId)) {
-        const { initializeApp } = await import('firebase/app');
-        const { getDatabase } = await import('firebase/database');
-        const { firebaseConfig } = await import('../config/firebase.config');
-
-        const app = initializeApp(firebaseConfig);
-        this.firebaseDatabase = getDatabase(app);
-      }
-    } catch (error) {
-      console.warn('Firebase Database not available, using mock data:', error);
-    }
   }
 
   async loadNotifications(limit = 20, startAfter?: string): Promise<Notice[]> {
     this.isLoading.set(true);
     try {
-      if (this.firebaseDatabase) {
+      const firebaseDatabase = await this.firebaseService.getDatabase();
+      
+      if (firebaseDatabase) {
         const { ref, get, query, orderByChild, limitToLast } = await import('firebase/database');
-        const noticesRef = ref(this.firebaseDatabase, 'notices');
+        const noticesRef = ref(firebaseDatabase, 'notices');
         const noticesQuery = query(noticesRef, orderByChild('datetime'), limitToLast(limit));
         const snapshot = await get(noticesQuery);
 
@@ -79,9 +64,11 @@ export class NotificationService {
 
   async getNotificationBySlug(slug: string): Promise<Notice | null> {
     try {
-      if (this.firebaseDatabase) {
+      const firebaseDatabase = await this.firebaseService.getDatabase();
+      
+      if (firebaseDatabase) {
         const { ref, get, query, orderByChild, equalTo } = await import('firebase/database');
-        const noticesRef = ref(this.firebaseDatabase, 'notices');
+        const noticesRef = ref(firebaseDatabase, 'notices');
         const queryRef = query(noticesRef, orderByChild('slug'), equalTo(slug));
         const snapshot = await get(queryRef);
 
@@ -110,9 +97,11 @@ export class NotificationService {
     notice: Omit<Notice, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<Notice> {
     try {
-      if (this.firebaseDatabase) {
+      const firebaseDatabase = await this.firebaseService.getDatabase();
+      
+      if (firebaseDatabase) {
         const { ref, push, serverTimestamp } = await import('firebase/database');
-        const noticesRef = ref(this.firebaseDatabase, 'notices');
+        const noticesRef = ref(firebaseDatabase, 'notices');
         const newNotice = {
           ...notice,
           createdAt: serverTimestamp(),
@@ -148,9 +137,11 @@ export class NotificationService {
 
   async updateNotification(id: string, updates: Partial<Notice>): Promise<Notice | null> {
     try {
-      if (this.firebaseDatabase) {
+      const firebaseDatabase = await this.firebaseService.getDatabase();
+      
+      if (firebaseDatabase) {
         const { ref, get, update, serverTimestamp } = await import('firebase/database');
-        const noticeRef = ref(this.firebaseDatabase, `notices/${id}`);
+        const noticeRef = ref(firebaseDatabase, `notices/${id}`);
         const snapshot = await get(noticeRef);
 
         if (!snapshot.exists()) {
@@ -213,9 +204,11 @@ export class NotificationService {
 
   async deleteNotification(id: string): Promise<boolean> {
     try {
-      if (this.firebaseDatabase) {
+      const firebaseDatabase = await this.firebaseService.getDatabase();
+      
+      if (firebaseDatabase) {
         const { ref, remove } = await import('firebase/database');
-        const noticeRef = ref(this.firebaseDatabase, `notices/${id}`);
+        const noticeRef = ref(firebaseDatabase, `notices/${id}`);
         await remove(noticeRef);
 
         // Update local state

@@ -1,16 +1,25 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy, linkedSignal, computed, effect } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  OnInit,
+  ChangeDetectionStrategy,
+  linkedSignal,
+  computed,
+  effect,
+} from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { 
-  form, 
-  required, 
-  minLength, 
-  validate, 
+import {
+  form,
+  required,
+  minLength,
+  validate,
   submit,
   Field,
   schema,
   customError,
   FieldPath,
-  ValidationError
+  ValidationError,
 } from '@angular/forms/signals';
 import { DatePipe } from '@angular/common';
 import { NotificationService } from '../services/notification.service';
@@ -32,14 +41,14 @@ function validateSlugPattern(path: FieldPath<string>): void {
   validate(path, (ctx) => {
     const value = ctx.value();
     const pattern = /^[a-z0-9-]+$/;
-    
+
     if (!pattern.test(value)) {
       return customError({
         kind: 'pattern',
         message: 'Slug must contain only lowercase letters, numbers, and hyphens',
       });
     }
-    
+
     return null;
   });
 }
@@ -50,7 +59,7 @@ const notificationSchema = schema<NotificationFormData>((path) => {
   required(path.slug, { message: 'Slug is required' });
   required(path.description, { message: 'Description is required' });
   required(path.datetime, { message: 'Date and time are required' });
-  
+
   validateSlugPattern(path.slug);
 });
 
@@ -485,8 +494,8 @@ export class EditNotification implements OnInit {
   protected notificationForm = form(this.notificationData, notificationSchema);
 
   // Computed signal to check for products validation
-  protected hasProductsError = computed(() => 
-    this.selectedProducts().length === 0 && this.notificationForm().touched()
+  protected hasProductsError = computed(
+    () => this.selectedProducts().length === 0 && this.notificationForm().touched()
   );
 
   constructor() {

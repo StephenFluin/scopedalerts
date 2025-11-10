@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Navigation } from './components/navigation';
 import { Footer } from './components/footer';
+import { ToastContainer } from './components/toast-container';
 import { ThemeService } from './services/theme.service';
 
 @Component({
@@ -19,7 +20,7 @@ import { ThemeService } from './services/theme.service';
       padding-top: 16px;
     }
   `,
-  imports: [RouterOutlet, Navigation, Footer],
+  imports: [RouterOutlet, Navigation, Footer, ToastContainer],
 })
 export class App implements OnInit {
   private themeService = inject(ThemeService);
