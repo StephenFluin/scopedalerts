@@ -38,20 +38,20 @@ export class ValidationErrorsComponent {
     // Check if it's a function (field signal) or direct field state
     return typeof field === 'function' ? field() : field;
   });
-  
+
   errorMessages = computed(() => {
     const fieldState = this.fieldState();
     return fieldState ? toErrorMessages(fieldState.errors()) : [];
   });
-  
+
   shouldShowErrors = computed(() => {
     const fieldState = this.fieldState();
     if (!fieldState) return false;
-    
+
     const hasErrors = fieldState.errors().length > 0;
     const isFieldTouched = fieldState.touched();
     const isFormSubmitted = this.submitted();
-    
+
     return hasErrors && (isFieldTouched || isFormSubmitted);
   });
 }

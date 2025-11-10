@@ -64,7 +64,7 @@ export class AdminProductsComponent implements OnInit {
   protected readonly editingProduct = signal<Product | null>(null);
   protected readonly showDeleteConfirm = signal(false);
   protected readonly productToDelete = signal<Product | null>(null);
-  
+
   // Track submission attempts for validation
   protected readonly addFormSubmitted = signal(false);
   protected readonly editFormSubmitted = signal(false);
@@ -119,7 +119,7 @@ export class AdminProductsComponent implements OnInit {
 
   protected async addProduct(event: Event): Promise<void> {
     event.preventDefault();
-    
+
     // Mark form as submitted for validation display
     this.addFormSubmitted.set(true);
 
@@ -191,7 +191,7 @@ export class AdminProductsComponent implements OnInit {
     event.preventDefault();
     const product = this.editingProduct();
     if (!product) return;
-    
+
     // Mark form as submitted for validation display
     this.editFormSubmitted.set(true);
 

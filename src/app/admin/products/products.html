@@ -29,10 +29,7 @@
             class="form-input"
             placeholder="My Awesome Product"
           />
-          <app-validation-errors 
-            [field]="addProductForm.name"
-            [submitted]="addFormSubmitted()"
-          />
+          <app-validation-errors [field]="addProductForm.name" [submitted]="addFormSubmitted()" />
         </div>
 
         <div class="form-field">
@@ -47,10 +44,7 @@
             class="form-input"
             placeholder="my-awesome-product"
           />
-          <app-validation-errors 
-            [field]="addProductForm.slug"
-            [submitted]="addFormSubmitted()"
-          />
+          <app-validation-errors [field]="addProductForm.slug" [submitted]="addFormSubmitted()" />
         </div>
       </div>
 
@@ -63,7 +57,7 @@
           class="form-textarea"
           placeholder="A comprehensive description of what this product does..."
         ></textarea>
-        <app-validation-errors 
+        <app-validation-errors
           [field]="addProductForm.description"
           [submitted]="addFormSubmitted()"
         />
@@ -122,7 +116,7 @@
                   [field]="editProductForm.name"
                   class="form-input"
                 />
-                <app-validation-errors 
+                <app-validation-errors
                   [field]="editProductForm.name"
                   [submitted]="editFormSubmitted()"
                 />
@@ -136,7 +130,7 @@
                   [field]="editProductForm.slug"
                   class="form-input"
                 />
-                <app-validation-errors 
+                <app-validation-errors
                   [field]="editProductForm.slug"
                   [submitted]="editFormSubmitted()"
                 />
@@ -150,7 +144,7 @@
                 [field]="editProductForm.description"
                 class="form-textarea"
               ></textarea>
-              <app-validation-errors 
+              <app-validation-errors
                 [field]="editProductForm.description"
                 [submitted]="editFormSubmitted()"
               />
