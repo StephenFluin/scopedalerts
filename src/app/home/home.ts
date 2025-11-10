@@ -238,23 +238,18 @@ import { Product } from '../models/product';
       color: #64b5f6;
     }
 
-    .notification-preview,
     .notification-description {
       margin: 0 0 12px 0;
       color: rgba(0, 0, 0, 0.7);
       line-height: 1.5;
-    }
-
-    :host-context(body.dark) .notification-preview,
-    :host-context(body.dark) .notification-description {
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    .notification-preview {
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 4;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+
+    :host-context(body.dark) .notification-description {
+      color: rgba(255, 255, 255, 0.7);
     }
 
     .notification-actions {
@@ -363,6 +358,16 @@ import { Product } from '../models/product';
       .rss-link {
         align-self: flex-end;
       }
+
+      .notification-description {
+        -webkit-line-clamp: 3;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .notification-description {
+        -webkit-line-clamp: 5;
+      }
     }
   `,
   imports: [RouterLink, DatePipe],
@@ -420,9 +425,5 @@ export class Home implements OnInit {
 
   getProductById(id: string): Product | undefined {
     return this.productService.allProducts().find((p) => p.id === id);
-  }
-
-  getPreview(description: string): string {
-    return description.length > 150 ? description.substring(0, 150) + '...' : description;
   }
 }
