@@ -10,9 +10,10 @@ import {
   ElementRef,
   ViewChild,
   AfterViewInit,
+  PLATFORM_ID,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { NotificationService } from '../services/notification.service';
 import { ProductService } from '../services/product.service';
 import { UserService } from '../services/user.service';
@@ -384,6 +385,9 @@ import { Product } from '../models/product';
   imports: [RouterLink, DatePipe],
 })
 export class Home implements OnInit, OnDestroy, AfterViewInit {
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+
   protected readonly notificationService = inject(NotificationService);
   protected readonly productService = inject(ProductService);
   protected readonly userService = inject(UserService);
@@ -437,11 +441,16 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
       this.notificationService.loadNotifications(),
       this.productService.loadProducts(),
     ]);
-    // Re-setup observer after loading data
-    this.setupIntersectionObserver();
+    // Re-setup observer after loading data (only in browser)
+    if (this.isBrowser) {
+      this.setupIntersectionObserver();
+    }
   }
 
   private setupIntersectionObserver(): void {
+    // Only setup intersection observer in browser environment
+    if (!this.isBrowser) return;
+
     // Disconnect existing observer
     if (this.intersectionObserver) {
       this.intersectionObserver.disconnect();
@@ -449,7 +458,7 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
 
     // Wait for the loadMoreTrigger to be available
     setTimeout(() => {
-      if (!this.loadMoreTrigger?.nativeElement) return;
+      if (!this.loadMoreTrigger?.nativeElement || !this.isBrowser) return;
 
       this.intersectionObserver = new IntersectionObserver(
         (entries) => {
