@@ -15,15 +15,18 @@ export class NotificationService {
 
   private notifications = signal<Notice[]>([]);
   private isLoading = signal(false);
+  private hasMore = signal(true);
+  private lastLoadedNotificationDate: string | null = null;
 
   readonly allNotifications = this.notifications.asReadonly();
   readonly loading = this.isLoading.asReadonly();
+  readonly hasMoreNotifications = this.hasMore.asReadonly();
 
   constructor() {
     // Initialize with empty notifications
   }
 
-  async loadNotifications(limit = 20, startAfter?: string): Promise<Notice[]> {
+  async loadNotifications(limit = 20, append = false): Promise<Notice[]> {
     // Add a pending task to ensure SSR waits for this operation
     const taskCleanup = this.pendingTasks.add();
     this.isLoading.set(true);
@@ -33,14 +36,29 @@ export class NotificationService {
       const databaseMethods = await this.firebaseService.getDatabaseMethods();
 
       if (firebaseDatabase && databaseMethods) {
-        const { ref, get, query, orderByChild, limitToLast } = databaseMethods;
+        const { ref, get, query, orderByChild, limitToLast, endAt } = databaseMethods;
         const noticesRef = ref(firebaseDatabase, 'notices');
-        const noticesQuery = query(noticesRef, orderByChild('datetime'), limitToLast(limit));
+
+        let noticesQuery;
+        if (append && this.lastLoadedNotificationDate) {
+          // Load older notifications for infinite scroll
+          // Use endAt to get notifications older than the last loaded one
+          noticesQuery = query(
+            noticesRef,
+            orderByChild('datetime'),
+            endAt(this.lastLoadedNotificationDate),
+            limitToLast(limit + 1) // +1 to check if there are more
+          );
+        } else {
+          // Initial load - get the most recent notifications
+          noticesQuery = query(noticesRef, orderByChild('datetime'), limitToLast(limit + 1));
+        }
+
         const snapshot = await get(noticesQuery);
 
         if (snapshot.exists()) {
           const data = snapshot.val();
-          const notifications = Object.keys(data)
+          let notifications = Object.keys(data)
             .map((key) => ({
               id: key,
               ...data[key],
@@ -49,22 +67,69 @@ export class NotificationService {
             }))
             .sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime());
 
-          this.notifications.set(notifications);
+          // If we're appending and we got the same notification as the last one, remove it
+          if (append && this.lastLoadedNotificationDate) {
+            notifications = notifications.filter(
+              (n) => n.datetime < this.lastLoadedNotificationDate!
+            );
+          }
+
+          // Check if there are more notifications
+          const hasMore = notifications.length > limit;
+          if (hasMore) {
+            notifications = notifications.slice(0, limit);
+          }
+          this.hasMore.set(hasMore);
+
+          // Update lastLoadedNotificationDate
+          if (notifications.length > 0) {
+            this.lastLoadedNotificationDate = notifications[notifications.length - 1].datetime;
+          }
+
+          if (append) {
+            this.notifications.update((current) => [...current, ...notifications]);
+          } else {
+            this.notifications.set(notifications);
+            this.lastLoadedNotificationDate =
+              notifications.length > 0 ? notifications[notifications.length - 1].datetime : null;
+          }
+
           return notifications;
+        } else {
+          this.hasMore.set(false);
         }
       }
 
       // No fallback data - return empty array if Firebase is not available
-      this.notifications.set([]);
+      if (!append) {
+        this.notifications.set([]);
+      }
+      this.hasMore.set(false);
     } catch (error) {
       console.error('Error loading notifications:', error);
       // Return empty array on error instead of mock data
-      this.notifications.set([]);
+      if (!append) {
+        this.notifications.set([]);
+      }
+      this.hasMore.set(false);
     } finally {
       this.isLoading.set(false);
       taskCleanup();
     }
     return [];
+  }
+
+  async loadMoreNotifications(limit = 20): Promise<Notice[]> {
+    if (this.isLoading() || !this.hasMore()) {
+      return [];
+    }
+    return this.loadNotifications(limit, true);
+  }
+
+  resetNotifications(): void {
+    this.notifications.set([]);
+    this.hasMore.set(true);
+    this.lastLoadedNotificationDate = null;
   }
 
   async getNotificationBySlug(slug: string): Promise<Notice | null> {

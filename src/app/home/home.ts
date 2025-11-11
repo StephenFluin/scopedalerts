@@ -4,8 +4,12 @@ import {
   signal,
   computed,
   OnInit,
+  OnDestroy,
   ChangeDetectionStrategy,
   PendingTasks,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
@@ -271,10 +275,54 @@ import { Product } from '../models/product';
       font-size: var(--font-size-lg);
     }
 
+    .load-more-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: var(--spacing-xl) var(--spacing-lg);
+      margin-top: var(--spacing-lg);
+    }
+
+    .load-more-container .loading-spinner {
+      color: var(--color-text-muted);
+      font-size: var(--font-size-base);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .load-more-container .loading-spinner::before {
+      content: '';
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--color-text-muted);
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     .empty-state {
       text-align: center;
       padding: var(--spacing-4xl) var(--spacing-lg);
       color: var(--color-text-muted);
+    }
+
+    .end-of-list {
+      text-align: center;
+      padding: var(--spacing-xl) var(--spacing-lg);
+      color: var(--color-text-muted);
+      font-size: var(--font-size-sm);
+      border-top: 1px solid var(--color-border-light);
+      margin-top: var(--spacing-lg);
+    }
+
+    .end-of-list p {
+      margin: 0;
     }
 
     @media (max-width: 768px) {
@@ -335,12 +383,16 @@ import { Product } from '../models/product';
   `,
   imports: [RouterLink, DatePipe],
 })
-export class Home implements OnInit {
+export class Home implements OnInit, OnDestroy, AfterViewInit {
   protected readonly notificationService = inject(NotificationService);
   protected readonly productService = inject(ProductService);
   protected readonly userService = inject(UserService);
 
+  @ViewChild('loadMoreTrigger', { static: false }) loadMoreTrigger?: ElementRef<HTMLDivElement>;
+
   protected readonly selectedProductIds = signal<string[]>([]);
+  private intersectionObserver?: IntersectionObserver;
+  private isLoadingMore = false;
 
   protected readonly filteredNotifications = computed(() => {
     const selectedIds = this.selectedProductIds();
@@ -365,15 +417,80 @@ export class Home implements OnInit {
     this.loadData();
   }
 
+  ngAfterViewInit(): void {
+    // Delay setup to ensure the view is fully initialized
+    setTimeout(() => {
+      this.setupIntersectionObserver();
+    }, 100);
+  }
+
+  ngOnDestroy(): void {
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+    }
+  }
+
   private async loadData(): Promise<void> {
+    // Reset notifications when loading fresh data
+    this.notificationService.resetNotifications();
     await Promise.all([
       this.notificationService.loadNotifications(),
       this.productService.loadProducts(),
     ]);
+    // Re-setup observer after loading data
+    this.setupIntersectionObserver();
+  }
+
+  private setupIntersectionObserver(): void {
+    // Disconnect existing observer
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+    }
+
+    // Wait for the loadMoreTrigger to be available
+    setTimeout(() => {
+      if (!this.loadMoreTrigger?.nativeElement) return;
+
+      this.intersectionObserver = new IntersectionObserver(
+        (entries) => {
+          const [entry] = entries;
+          if (
+            entry.isIntersecting &&
+            this.notificationService.hasMoreNotifications() &&
+            !this.notificationService.loading() &&
+            !this.isLoadingMore
+          ) {
+            this.loadMoreNotifications();
+          }
+        },
+        {
+          rootMargin: '200px', // Trigger 200px before the element comes into view
+          threshold: 0.1,
+        }
+      );
+
+      this.intersectionObserver.observe(this.loadMoreTrigger.nativeElement);
+    }, 0);
+  }
+
+  private async loadMoreNotifications(): Promise<void> {
+    if (this.isLoadingMore) return;
+
+    this.isLoadingMore = true;
+    try {
+      await this.notificationService.loadMoreNotifications();
+      // Re-setup observer after loading more content
+      setTimeout(() => {
+        this.setupIntersectionObserver();
+      }, 100);
+    } finally {
+      this.isLoadingMore = false;
+    }
   }
 
   toggleAllProducts(): void {
     this.selectedProductIds.set([]);
+    // Don't reload data for filter changes - just use the computed filtered notifications
   }
 
   toggleProduct(productId: string): void {
@@ -384,6 +501,7 @@ export class Home implements OnInit {
         return [...ids, productId];
       }
     });
+    // Don't reload data for filter changes - just use the computed filtered notifications
   }
 
   getProductById(id: string): Product | undefined {

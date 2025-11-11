@@ -109,6 +109,19 @@
         </div>
       </div>
       }
+
+      <!-- Infinite scroll trigger and loading indicator -->
+      @if (notificationService.hasMoreNotifications()) {
+      <div #loadMoreTrigger class="load-more-container">
+        @if (notificationService.loading()) {
+        <div class="loading-spinner">Loading more notifications...</div>
+        }
+      </div>
+      } @else if (filteredNotifications().length > 0 && !notificationService.loading()) {
+      <div class="end-of-list">
+        <p>You've reached the end of the notifications.</p>
+      </div>
+      }
     </div>
   </div>
 </div>
