@@ -96,6 +96,12 @@ import { Product } from '../models/product';
       margin-bottom: var(--spacing-md);
     }
 
+    .filter-actions {
+      display: flex;
+      gap: var(--spacing-md);
+      align-items: center;
+    }
+
     .filter-options {
       display: flex;
       flex-wrap: wrap;
@@ -153,6 +159,35 @@ import { Product } from '../models/product';
     }
     
     .rss-link .rss-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .subscribe-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      color: var(--color-primary);
+      text-decoration: none;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      padding: var(--spacing-xs) var(--spacing-md);
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
+    }
+    
+    .subscribe-link:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--color-primary-hover);
+    }
+    
+    .subscribe-link:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+    
+    .subscribe-link .subscribe-icon {
       width: 16px;
       height: 16px;
       flex-shrink: 0;
@@ -356,7 +391,7 @@ import { Product } from '../models/product';
         gap: var(--spacing-sm);
       }
 
-      .rss-link {
+      .filter-actions {
         align-self: flex-end;
       }
 

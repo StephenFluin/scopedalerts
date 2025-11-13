@@ -7,6 +7,11 @@ export const routes: Routes = [
     title: 'ScopedAlerts - Product Notifications',
   },
   {
+    path: 'subscribe',
+    loadComponent: () => import('./subscribe/subscribe').then((m) => m.SubscribeComponent),
+    title: 'Manage Subscriptions - ScopedAlerts',
+  },
+  {
     path: 'notifications/:slug',
     loadComponent: () =>
       import('./view-notification/view-notification').then((m) => m.ViewNotification),

@@ -16,26 +16,75 @@
     <div class="product-filter">
       <div class="filter-header">
         <h3>Filter by Products</h3>
-        <a [href]="rssUrl()" target="_blank" class="rss-link">
-          <svg class="rss-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M4 11a9 9 0 0 1 9 9"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M4 4a16 16 0 0 1 16 16"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <circle cx="5" cy="19" r="1" fill="currentColor" />
-          </svg>
-          RSS
-        </a>
+        <div class="filter-actions">
+          <a [href]="rssUrl()" target="_blank" class="rss-link">
+            <svg
+              class="rss-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 11a9 9 0 0 1 9 9"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M4 4a16 16 0 0 1 16 16"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="5" cy="19" r="1" fill="currentColor" />
+            </svg>
+            RSS
+          </a>
+          @if (!userService.isGuest()) {
+          <a routerLink="/subscribe" class="subscribe-link">
+            <svg
+              class="subscribe-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle
+                cx="9"
+                cy="7"
+                r="4"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M23 21v-2a4 4 0 0 0-3-3.87"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M16 3.13a4 4 0 0 1 0 7.75"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Manage Subscriptions
+          </a>
+          }
+        </div>
       </div>
       <div class="filter-options">
         <label class="filter-option">
