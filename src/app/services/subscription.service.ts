@@ -39,15 +39,15 @@ export class SubscriptionService {
    */
   private loadFromLocalStorage(): void {
     if (!this.isBrowser) return;
-    
+
     const key = this.getLocalStorageKey();
     if (!key) return;
-    
+
     try {
       const stored = localStorage.getItem(key);
       if (stored) {
         const productIds: string[] = JSON.parse(stored);
-        const subscriptions: Subscription[] = productIds.map(productId => ({ productId }));
+        const subscriptions: Subscription[] = productIds.map((productId) => ({ productId }));
         this.subscriptions.set(subscriptions);
         console.log('Loaded subscriptions from localStorage:', productIds);
       }
@@ -61,10 +61,10 @@ export class SubscriptionService {
    */
   private saveToLocalStorage(productIds: string[]): void {
     if (!this.isBrowser) return;
-    
+
     const key = this.getLocalStorageKey();
     if (!key) return;
-    
+
     try {
       localStorage.setItem(key, JSON.stringify(productIds));
       console.log('Saved subscriptions to localStorage:', productIds);
@@ -110,10 +110,12 @@ export class SubscriptionService {
       }
     } catch (error) {
       console.error('Error loading subscriptions:', error);
-      
+
       // If it's a permission error, this is likely because the database rules haven't been deployed yet
       if (error instanceof Error && error.message.includes('Permission denied')) {
-        console.warn('Permission denied when loading subscriptions. This may be because the database rules need to be deployed.');
+        console.warn(
+          'Permission denied when loading subscriptions. This may be because the database rules need to be deployed.'
+        );
         console.warn('Please deploy the database rules using: firebase deploy --only database');
         // For now, start with empty subscriptions
         this.subscriptions.set([]);
@@ -167,10 +169,12 @@ export class SubscriptionService {
       }
     } catch (error) {
       console.error('Error saving subscriptions:', error);
-      
+
       // If it's a permission error, provide a helpful message
       if (error instanceof Error && error.message.includes('Permission denied')) {
-        console.warn('Permission denied when saving subscriptions. Database rules need to be deployed.');
+        console.warn(
+          'Permission denied when saving subscriptions. Database rules need to be deployed.'
+        );
         console.warn('Please deploy the database rules using: firebase deploy --only database');
         throw new Error('Unable to save subscriptions. Please try again later or contact support.');
       } else {
