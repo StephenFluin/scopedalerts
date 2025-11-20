@@ -5,6 +5,7 @@ import {
   computed,
   OnInit,
   ChangeDetectionStrategy,
+  effect,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -542,6 +543,7 @@ export class SubscribeComponent implements OnInit {
   protected readonly selectedProductIds = signal<Set<string>>(new Set());
   protected readonly hasChanges = signal(false);
   protected readonly authCheckComplete = signal(false);
+  private initializedFromSubscriptions = false;
 
   protected readonly user = computed(() => this.userService.user());
   protected readonly products = computed(() => this.productService.allProducts());
@@ -553,6 +555,28 @@ export class SubscribeComponent implements OnInit {
       !this.authCheckComplete()
   );
   protected readonly saving = computed(() => this.subscriptionService.isSaving());
+
+  constructor() {
+    // Sync selected checkboxes with subscriptions once they have finished loading
+    effect(() => {
+      const user = this.user();
+      const loaded = this.subscriptionService.isLoaded();
+
+      if (!user) {
+        // Reset when user logs out
+        this.selectedProductIds.set(new Set());
+        this.initializedFromSubscriptions = false;
+        this.hasChanges.set(false);
+        return;
+      }
+
+      if (loaded && !this.initializedFromSubscriptions) {
+        this.selectedProductIds.set(new Set(this.subscriptionService.subscribedProductIds()));
+        this.hasChanges.set(false);
+        this.initializedFromSubscriptions = true;
+      }
+    });
+  }
 
   async ngOnInit(): Promise<void> {
     try {
@@ -583,10 +607,7 @@ export class SubscribeComponent implements OnInit {
         this.subscriptionService.loadSubscriptions(),
       ]);
 
-      // Initialize selected product IDs from current subscriptions
-      const subscribedIds = this.subscriptionService.subscribedProductIds();
-      this.selectedProductIds.set(new Set(subscribedIds));
-      this.hasChanges.set(false);
+      // The effect will handle initializing selectedProductIds from subscriptions
     } catch (error) {
       console.error('Error loading subscription data:', error);
       this.toastService.error('Failed to load subscription data');
@@ -652,6 +673,9 @@ export class SubscribeComponent implements OnInit {
 
   async onSignIn(): Promise<void> {
     try {
+      // Reset initialization flag before signing in
+      this.initializedFromSubscriptions = false;
+
       await this.userService.signInWithGoogle();
       // After successful sign-in, load data
       if (this.user()) {

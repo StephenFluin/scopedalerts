@@ -18,10 +18,13 @@ export class SubscriptionService {
 
   private subscriptions = signal<Subscription[]>([]);
   private loading = signal(false);
+  private loaded = signal(false);
   private saveLoading = signal(false);
 
   readonly userSubscriptions = this.subscriptions.asReadonly();
   readonly isLoading = this.loading.asReadonly();
+  /** True once subscriptions have been loaded for the current user. */
+  readonly isLoaded = this.loaded.asReadonly();
   readonly isSaving = this.saveLoading.asReadonly();
 
   readonly subscribedProductIds = computed(() => this.subscriptions().map((sub) => sub.productId));
@@ -49,7 +52,6 @@ export class SubscriptionService {
         const productIds: string[] = JSON.parse(stored);
         const subscriptions: Subscription[] = productIds.map((productId) => ({ productId }));
         this.subscriptions.set(subscriptions);
-        console.log('Loaded subscriptions from localStorage:', productIds);
       }
     } catch (error) {
       console.warn('Error loading from localStorage:', error);
@@ -67,7 +69,6 @@ export class SubscriptionService {
 
     try {
       localStorage.setItem(key, JSON.stringify(productIds));
-      console.log('Saved subscriptions to localStorage:', productIds);
     } catch (error) {
       console.warn('Error saving to localStorage:', error);
     }
@@ -81,9 +82,11 @@ export class SubscriptionService {
     if (!user) {
       console.warn('No user found, cannot load subscriptions');
       this.subscriptions.set([]);
+      this.loaded.set(false);
       return;
     }
 
+    this.loaded.set(false);
     this.loading.set(true);
     try {
       const database = await this.firebaseService.getDatabase();
@@ -105,8 +108,7 @@ export class SubscriptionService {
         }
       } else {
         // Fallback for development
-        console.log('Using mock subscription data');
-        this.subscriptions.set([]);
+        this.loadFromLocalStorage();
       }
     } catch (error) {
       console.error('Error loading subscriptions:', error);
@@ -117,14 +119,15 @@ export class SubscriptionService {
           'Permission denied when loading subscriptions. This may be because the database rules need to be deployed.'
         );
         console.warn('Please deploy the database rules using: firebase deploy --only database');
-        // For now, start with empty subscriptions
-        this.subscriptions.set([]);
+        // Try localStorage fallback
+        this.loadFromLocalStorage();
       } else {
-        // For other errors, still set empty array but log the error
-        this.subscriptions.set([]);
+        // For other errors, try localStorage fallback
+        this.loadFromLocalStorage();
       }
     } finally {
       this.loading.set(false);
+      this.loaded.set(true);
     }
   }
 
@@ -159,6 +162,9 @@ export class SubscriptionService {
           productId,
         }));
         this.subscriptions.set(subscriptionArray);
+
+        // Also save to localStorage as backup
+        this.saveToLocalStorage(productIds);
       } else {
         // Fallback for development
         console.log('Mock save subscriptions:', productIds);
@@ -166,6 +172,9 @@ export class SubscriptionService {
           productId,
         }));
         this.subscriptions.set(subscriptionArray);
+
+        // Save to localStorage
+        this.saveToLocalStorage(productIds);
       }
     } catch (error) {
       console.error('Error saving subscriptions:', error);
@@ -213,5 +222,6 @@ export class SubscriptionService {
    */
   clearSubscriptions(): void {
     this.subscriptions.set([]);
+    this.loaded.set(false);
   }
 }
