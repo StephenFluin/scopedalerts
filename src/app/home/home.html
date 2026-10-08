@@ -12,85 +12,98 @@
     }
   </div>
 
-  <div class="filter-section">
+  @if (ongoingNotices().length > 0) {
+  <section class="ongoing-banner" aria-labelledby="ongoing-heading">
+    <h2 id="ongoing-heading">Ongoing</h2>
+    <ul>
+      @for (notice of ongoingNotices(); track notice.id) {
+      <li>
+        <app-health-pill [health]="severityOf(notice)" />
+        <a [routerLink]="['/notifications', notice.slug]">{{ notice.title }}</a>
+        <span class="muted">since <app-relative-time [value]="notice.datetime" /></span>
+      </li>
+      }
+    </ul>
+  </section>
+  }
+
+  @if (productStatuses().length > 0) {
+  <nav class="status-strip" aria-label="Product status">
+    @for (status of productStatuses(); track status.product.id) {
+    <a
+      class="status-chip"
+      routerLink="/"
+      [queryParams]="{ products: status.product.slug }"
+      [attr.aria-label]="status.product.name + ': ' + healthLabels[status.health]"
+    >
+      <span class="status-dot" [class]="'status-dot health-' + status.health" aria-hidden="true"></span>
+      {{ status.product.name }}
+    </a>
+    }
+    <a routerLink="/status" class="status-more">Full status →</a>
+  </nav>
+  }
+
+  <section class="filter-section" aria-label="Filters">
+    <div class="search-row">
+      <label for="notice-search" class="sr-only">Search notifications</label>
+      <input
+        #searchInput
+        id="notice-search"
+        type="search"
+        class="search-input"
+        placeholder="Search notifications…"
+        autocomplete="off"
+        [value]="searchQuery()"
+        (input)="onSearchInput(searchInput.value)"
+      />
+      @if (searching()) {
+      <button type="button" class="clear-search" (click)="clearSearch(searchInput)">Clear</button>
+      }
+    </div>
+
     <div class="product-filter">
       <div class="filter-header">
-        <h3>Filter by Products</h3>
+        <h2 id="filter-heading" class="filter-title">Filter by product</h2>
         <div class="filter-actions">
-          <a [href]="rssUrl()" target="_blank" class="rss-link">
-            <svg
-              class="rss-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M4 11a9 9 0 0 1 9 9"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M4 4a16 16 0 0 1 16 16"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
+          <a [href]="rssUrl()" target="_blank" rel="noopener" class="feed-link rss-link">
+            <svg class="feed-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 11a9 9 0 0 1 9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M4 4a16 16 0 0 1 16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
               <circle cx="5" cy="19" r="1" fill="currentColor" />
             </svg>
             RSS
           </a>
+          <a [href]="calendarUrl()" class="feed-link calendar-link">
+            <svg class="feed-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2" />
+              <path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            Calendar
+          </a>
           @if (!userService.isGuest()) {
-          <a routerLink="/subscribe" class="subscribe-link">
-            <svg
-              class="subscribe-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <circle
-                cx="9"
-                cy="7"
-                r="4"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M23 21v-2a4 4 0 0 0-3-3.87"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M16 3.13a4 4 0 0 1 0 7.75"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
+          <a routerLink="/subscribe" class="feed-link subscribe-link">
+            <svg class="feed-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             Manage Subscriptions
           </a>
           }
         </div>
       </div>
-      <div class="filter-options">
+
+      <fieldset class="filter-options" aria-labelledby="filter-heading">
         <label class="filter-option">
           <input type="checkbox" [checked]="showAllProducts()" (change)="toggleAllProducts()" />
           All Products
         </label>
+
+        @if (subscribedProductIds().length > 0) {
+        <label class="filter-option">
+          <input type="checkbox" [checked]="showingSubscriptions()" (change)="showingSubscriptions() ? toggleAllProducts() : showMyProducts()" />
+          My subscriptions
+        </label>
+        }
 
         @for (product of productService.allProducts(); track product.id) {
         <label class="filter-option">
@@ -102,75 +115,107 @@
           {{ product.name }}
         </label>
         }
-      </div>
+      </fieldset>
     </div>
-  </div>
+  </section>
 
-  <div class="notifications-section">
-    @if (notificationService.loading()) {
-    <div class="loading-container">
-      <div class="loading-spinner">Loading...</div>
+  <section class="notifications-section" aria-labelledby="feed-heading">
+    <h2 id="feed-heading" class="sr-only">Notifications</h2>
+    <p class="sr-only" aria-live="polite">{{ resultsAnnouncement() }}</p>
+
+    @if (notificationService.loading() && filteredNotifications().length === 0) {
+    <div class="notifications-list" role="status" aria-label="Loading notifications">
+      @for (i of [1, 2, 3]; track i) {
+      <div class="notification-card skeleton-card" aria-hidden="true">
+        <span class="skeleton skeleton-title"></span>
+        <span class="skeleton skeleton-line"></span>
+        <span class="skeleton skeleton-line short"></span>
+      </div>
+      }
     </div>
-    } @if (filteredNotifications().length === 0 && !notificationService.loading()) {
-    <div class="empty-state">
+    } @else if (filteredNotifications().length === 0) {
+    <div class="empty-state" role="status">
+      @if (searching()) {
+      <p>No notifications match "{{ searchQuery() }}".</p>
+      } @else {
       <p>No notifications found for the selected products.</p>
+      }
     </div>
     }
 
     <div class="notifications-list">
-      @for (notification of filteredNotifications(); track notification.id) {
-      <div class="notification-card">
-        <div class="notification-header">
-          <a [routerLink]="['/notifications', notification.slug]" class="notification-title-link">
-            <h2 class="notification-title">
-              {{ notification.title }}
-            </h2>
-          </a>
-          <div class="notification-meta">
-            <span class="notification-date">
-              {{ notification.datetime | date : 'medium' }}
-            </span>
-            <div class="affected-products">
-              @for (productId of notification.affectedProducts; track productId) { @if
-              (getProductById(productId); as product) {
-              <span class="product-tag">{{ product.name }}</span>
-              } }
-            </div>
-          </div>
-        </div>
+      @for (group of groupedNotifications(); track group.key) {
+      <section class="day-group" [attr.aria-labelledby]="'day-' + group.key">
+        <h3 class="day-heading" [id]="'day-' + group.key">{{ group.label }}</h3>
 
-        <div class="notification-content">
+        @for (notification of group.notices; track notification.id) {
+        <article class="notification-card" [class.ongoing]="isOngoing(notification)">
+          <header class="notification-header">
+            <h4 class="notification-title">
+              <a [routerLink]="['/notifications', notification.slug]" class="notification-title-link">
+                {{ notification.title }}
+              </a>
+            </h4>
+            <div class="notification-meta">
+              <span class="notification-date">
+                @if (severityOf(notification) !== 'info' || isOngoing(notification)) {
+                <app-health-pill
+                  [health]="severityOf(notification)"
+                  [suffix]="isOngoing(notification) ? 'Ongoing' : ''"
+                />
+                }
+                <app-relative-time [value]="notification.datetime" />
+              </span>
+              <div class="affected-products">
+                @for (productId of notification.affectedProducts; track productId) {
+                @if (getProductById(productId); as product) {
+                <span class="product-tag">{{ product.name }}</span>
+                } }
+              </div>
+            </div>
+          </header>
+
           <p class="notification-description">
-            {{ notification.description }}
+            {{ notification.summary || (notification.description | markdownText: 400) }}
           </p>
 
           <div class="notification-actions">
-            <a [routerLink]="['/notifications', notification.slug]" class="view-link">
+            <a
+              [routerLink]="['/notifications', notification.slug]"
+              class="view-link"
+              [attr.aria-label]="'View details: ' + notification.title"
+            >
               View Details
             </a>
 
             @if (userService.isAdmin()) {
-            <a [routerLink]="['/notifications', notification.slug, 'edit']" class="edit-link">
+            <a
+              [routerLink]="['/notifications', notification.slug, 'edit']"
+              class="edit-link"
+              [attr.aria-label]="'Edit: ' + notification.title"
+            >
               Edit
             </a>
             }
           </div>
-        </div>
-      </div>
+        </article>
+        }
+      </section>
       }
 
+      @if (!searching()) {
       <!-- Infinite scroll trigger and loading indicator -->
       @if (notificationService.hasMoreNotifications()) {
       <div #loadMoreTrigger class="load-more-container">
-        @if (notificationService.loading()) {
-        <div class="loading-spinner">Loading more notifications...</div>
+        @if (notificationService.loading() && filteredNotifications().length > 0) {
+        <div class="loading-spinner" role="status">Loading more notifications...</div>
         }
       </div>
       } @else if (filteredNotifications().length > 0 && !notificationService.loading()) {
       <div class="end-of-list">
         <p>You've reached the end of the notifications.</p>
       </div>
-      }
+      } }
     </div>
-  </div>
+  </section>
 </div>

@@ -3,425 +3,87 @@ import {
   inject,
   signal,
   computed,
+  effect,
+  untracked,
   OnInit,
   OnDestroy,
   ChangeDetectionStrategy,
-  PendingTasks,
   ElementRef,
   ViewChild,
   AfterViewInit,
   PLATFORM_ID,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { DatePipe, isPlatformBrowser } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
 import { NotificationService } from '../services/notification.service';
 import { ProductService } from '../services/product.service';
 import { UserService } from '../services/user.service';
+import { SubscriptionService } from '../services/subscription.service';
 import { Notice } from '../models/notice';
 import { Product } from '../models/product';
+import { MarkdownTextPipe } from '../shared/markdown.pipe';
+import { HealthPill } from '../shared/health-pill';
+import { RelativeTime } from '../shared/relative-time';
+import {
+  HEALTH_LABELS,
+  isOngoing,
+  markdownToText,
+  productHealth,
+  severityOf,
+} from '../utils/notice.utils';
+
+const DAY_MS = 24 * 3600 * 1000;
+
+interface DayGroup {
+  key: string; // YYYY-MM-DD (UTC)
+  label: string;
+  notices: Notice[];
+}
+
+/** Groups notices by UTC day so server and browser render identical structure. */
+function groupByDay(notices: Notice[], now = Date.now()): DayGroup[] {
+  const today = new Date(now).toISOString().slice(0, 10);
+  const yesterday = new Date(now - DAY_MS).toISOString().slice(0, 10);
+  const groups: DayGroup[] = [];
+
+  for (const notice of notices) {
+    const key = notice.datetime.slice(0, 10);
+    let group = groups[groups.length - 1];
+    if (!group || group.key !== key) {
+      const label =
+        key === today
+          ? 'Today'
+          : key === yesterday
+            ? 'Yesterday'
+            : new Date(`${key}T00:00:00Z`).toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+                timeZone: 'UTC',
+              });
+      group = { key, label, notices: [] };
+      groups.push(group);
+    }
+    group.notices.push(notice);
+  }
+  return groups;
+}
 
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home.html',
-  styles: `
-    .home-container {
-      max-width: var(--max-width-content);
-      margin: 0 auto;
-      padding: var(--spacing-lg);
-    }
-
-    .header-section {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--spacing-lg);
-      margin-bottom: var(--spacing-2xl);
-    }
-    
-    .header-section h1 {
-      margin: 0;
-      font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text-primary);
-      line-height: var(--line-height-tight);
-    }
-
-    .header-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--spacing-sm);
-      padding: 10px 20px;
-      border: none;
-      border-radius: var(--radius-md);
-      font-size: var(--font-size-base);
-      font-weight: var(--font-weight-medium);
-      text-decoration: none;
-      cursor: pointer;
-      white-space: nowrap;
-      background-color: var(--color-primary);
-      color: white;
-    }
-    
-    .header-btn:hover:not(:disabled) {
-      background-color: var(--color-primary-hover);
-    }
-    
-    .header-btn:focus-visible {
-      outline: none;
-      box-shadow: var(--focus-ring);
-    }
-
-    .filter-section {
-      background-color: var(--color-surface);
-      border: var(--card-border);
-      border-radius: var(--card-radius);
-      padding: var(--card-padding);
-      box-shadow: var(--shadow-sm);
-      margin-bottom: var(--spacing-2xl);
-    }
-
-    .product-filter h3 {
-      margin: 0 0 var(--spacing-md) 0;
-      font-size: var(--font-size-base);
-      color: var(--color-text-primary);
-      font-weight: var(--font-weight-medium);
-    }
-
-    .filter-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--spacing-md);
-    }
-
-    .filter-actions {
-      display: flex;
-      gap: var(--spacing-md);
-      align-items: center;
-    }
-
-    .filter-options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--spacing-lg);
-      margin-bottom: var(--spacing-lg);
-    }
-
-    .filter-option {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-sm);
-      cursor: pointer;
-      font-size: var(--font-size-sm);
-      color: var(--color-text-primary);
-      padding: var(--spacing-xs);
-      border-radius: var(--radius-sm);
-      transition: background-color var(--transition-fast);
-    }
-    
-    .filter-option:hover {
-      background-color: var(--color-hover-light);
-    }
-    
-    .filter-option:focus-visible {
-      outline: none;
-      box-shadow: var(--focus-ring);
-    }
-    
-    .filter-option input[type="checkbox"] {
-      margin: 0;
-      cursor: pointer;
-    }
-
-    .rss-link {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--spacing-xs);
-      color: var(--color-rss-500);
-      text-decoration: none;
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-medium);
-      padding: var(--spacing-xs) var(--spacing-md);
-      border-radius: var(--radius-md);
-      transition: all var(--transition-fast);
-    }
-    
-    .rss-link:hover {
-      background-color: rgba(220, 38, 38, 0.1);
-      color: var(--color-rss-600);
-    }
-    
-    .rss-link:focus-visible {
-      outline: none;
-      box-shadow: var(--focus-ring);
-    }
-    
-    .rss-link .rss-icon {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-    }
-
-    .subscribe-link {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--spacing-xs);
-      color: var(--color-primary);
-      text-decoration: none;
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-medium);
-      padding: var(--spacing-xs) var(--spacing-md);
-      border-radius: var(--radius-md);
-      transition: all var(--transition-fast);
-    }
-    
-    .subscribe-link:hover {
-      background-color: rgba(59, 130, 246, 0.1);
-      color: var(--color-primary-hover);
-    }
-    
-    .subscribe-link:focus-visible {
-      outline: none;
-      box-shadow: var(--focus-ring);
-    }
-    
-    .subscribe-link .subscribe-icon {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-    }
-
-    .notifications-list {
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-lg);
-    }
-
-    .notification-card {
-      background-color: var(--color-surface);
-      border: var(--card-border);
-      border-radius: var(--card-radius);
-      padding: var(--card-padding);
-      box-shadow: var(--shadow-sm);
-      margin-bottom: var(--spacing-lg);
-    }
-
-    .notification-header {
-      margin-bottom: var(--spacing-md);
-    }
-
-    .notification-title-link {
-      text-decoration: none;
-      color: inherit;
-      display: block;
-    }
-    
-    .notification-title-link:focus-visible {
-      outline: none;
-      box-shadow: var(--focus-ring);
-      border-radius: var(--radius-sm);
-    }
-
-    .notification-title {
-      margin: 0 0 var(--spacing-sm) 0;
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
-    }
-    
-    .notification-title-link:hover .notification-title {
-      color: var(--color-link);
-    }
-
-    .notification-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: var(--spacing-lg);
-      margin-bottom: var(--spacing-md);
-    }
-
-    .notification-date {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-muted);
-    }
-
-    .affected-products {
-      display: flex;
-      gap: var(--spacing-sm);
-      flex-wrap: wrap;
-    }
-
-    .notification-description {
-      color: var(--color-text-secondary);
-      line-height: var(--line-height-base);
-      margin-bottom: var(--spacing-md);
-      display: -webkit-box;
-      -webkit-line-clamp: 4;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .notification-actions {
-      display: flex;
-      gap: var(--spacing-md);
-      margin-top: var(--spacing-md);
-    }
-
-    .view-link,
-    .edit-link {
-      display: inline-flex;
-      align-items: center;
-      color: var(--color-link);
-      text-decoration: none;
-      font-size: var(--font-size-base);
-      font-weight: var(--button-font-weight);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      padding: var(--spacing-xs) 0;
-    }
-    
-    .view-link:hover:not(:disabled),
-    .edit-link:hover:not(:disabled) {
-      color: var(--color-link-hover);
-      text-decoration: underline;
-    }
-
-    .edit-link {
-      color: var(--color-secondary-600);
-    }
-    
-    .edit-link:hover:not(:disabled) {
-      color: var(--color-secondary-700);
-    }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: var(--spacing-4xl) var(--spacing-lg);
-      text-align: center;
-    }
-    
-    .loading-container .loading-spinner {
-      color: var(--color-text-muted);
-      font-size: var(--font-size-lg);
-    }
-
-    .load-more-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: var(--spacing-xl) var(--spacing-lg);
-      margin-top: var(--spacing-lg);
-    }
-
-    .load-more-container .loading-spinner {
-      color: var(--color-text-muted);
-      font-size: var(--font-size-base);
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-sm);
-    }
-
-    .load-more-container .loading-spinner::before {
-      content: '';
-      width: 16px;
-      height: 16px;
-      border: 2px solid var(--color-text-muted);
-      border-top: 2px solid transparent;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: var(--spacing-4xl) var(--spacing-lg);
-      color: var(--color-text-muted);
-    }
-
-    .end-of-list {
-      text-align: center;
-      padding: var(--spacing-xl) var(--spacing-lg);
-      color: var(--color-text-muted);
-      font-size: var(--font-size-sm);
-      border-top: 1px solid var(--color-border-light);
-      margin-top: var(--spacing-lg);
-    }
-
-    .end-of-list p {
-      margin: 0;
-    }
-
-    @media (max-width: 768px) {
-      .home-container {
-        padding: var(--spacing-sm);
-      }
-      
-      .header-section {
-        flex-direction: column;
-        align-items: flex-start;
-        
-        h1 {
-          font-size: var(--font-size-2xl);
-        }
-        
-        .admin-actions {
-          width: 100%;
-          justify-content: flex-end;
-        }
-      }
-      
-      .filter-options {
-        flex-direction: column;
-        gap: var(--spacing-sm);
-      }
-
-      .filter-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-sm);
-      }
-
-      .filter-actions {
-        align-self: flex-end;
-      }
-
-      .notification-description {
-        -webkit-line-clamp: 3;
-      }
-      
-      .notification-meta {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-sm);
-      }
-    }
-
-    @media (min-width: 1200px) {
-      .notification-description {
-        -webkit-line-clamp: 5;
-      }
-    }
-
-    html.dark .product-tag {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: var(--color-text-secondary);
-    }
-  `,
-  imports: [RouterLink, DatePipe],
+  styleUrl: './home.scss',
+  imports: [RouterLink, MarkdownTextPipe, HealthPill, RelativeTime],
 })
 export class Home implements OnInit, OnDestroy, AfterViewInit {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private subscriptionService = inject(SubscriptionService);
 
   protected readonly notificationService = inject(NotificationService);
   protected readonly productService = inject(ProductService);
@@ -429,28 +91,124 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
 
   @ViewChild('loadMoreTrigger', { static: false }) loadMoreTrigger?: ElementRef<HTMLDivElement>;
 
-  protected readonly selectedProductIds = signal<string[]>([]);
   private intersectionObserver?: IntersectionObserver;
   private isLoadingMore = false;
+  private searchDebounce?: ReturnType<typeof setTimeout>;
+
+  private readonly queryParams = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
+
+  /** Product filter, kept in the URL (?products=slug-a,slug-b) so views can be shared. */
+  protected readonly selectedSlugs = computed(() =>
+    (this.queryParams().get('products') ?? '')
+      .split(',')
+      .map((slug) => slug.trim())
+      .filter(Boolean)
+  );
+
+  protected readonly selectedProductIds = computed(() => {
+    const slugs = new Set(this.selectedSlugs());
+    return this.productService
+      .allProducts()
+      .filter((product) => slugs.has(product.slug))
+      .map((product) => product.id);
+  });
+
+  /** Search text, also kept in the URL (?q=...). */
+  protected readonly searchQuery = computed(() => (this.queryParams().get('q') ?? '').trim());
+
+  /** Every notice, loaded on demand the first time someone searches. */
+  private readonly allNotices = signal<Notice[] | null>(null);
+  protected readonly searching = computed(() => this.searchQuery().length > 0);
 
   protected readonly filteredNotifications = computed(() => {
-    const selectedIds = this.selectedProductIds();
-    if (selectedIds.length === 0) {
-      return this.notificationService.allNotifications();
-    }
-    return this.notificationService.getNotificationsByProducts(selectedIds);
+    const query = this.searchQuery().toLowerCase();
+    const source =
+      query && this.allNotices() ? this.allNotices()! : this.notificationService.allNotifications();
+    const selectedIds = new Set(this.selectedProductIds());
+
+    return source.filter((notice) => {
+      if (selectedIds.size > 0 && !notice.affectedProducts.some((id) => selectedIds.has(id))) {
+        return false;
+      }
+      if (query) {
+        const haystack = `${notice.title} ${markdownToText(notice.description)}`.toLowerCase();
+        return haystack.includes(query);
+      }
+      return true;
+    });
   });
+
+  protected readonly groupedNotifications = computed(() =>
+    groupByDay(this.filteredNotifications())
+  );
 
   protected readonly showAllProducts = computed(() => this.selectedProductIds().length === 0);
 
-  protected readonly rssUrl = computed(() => {
-    const selectedIds = this.selectedProductIds();
-    if (selectedIds.length === 0) {
-      return '/rss';
-    }
-    const productSlugs = selectedIds.map((id) => this.getProductById(id)?.slug).filter(Boolean);
-    return `/rss?products=${productSlugs.join(',')}`;
+  protected readonly ongoingNotices = computed(() =>
+    this.notificationService.allNotifications().filter(isOngoing)
+  );
+
+  protected readonly productStatuses = computed(() =>
+    this.productService.allProducts().map((product) => ({
+      product,
+      health: productHealth(this.notificationService.allNotifications(), product.id),
+    }))
+  );
+
+  protected readonly subscribedProductIds = computed(() =>
+    this.userService.user() ? this.subscriptionService.subscribedProductIds() : []
+  );
+
+  protected readonly showingSubscriptions = computed(() => {
+    const subscribed = this.subscribedProductIds();
+    const selected = this.selectedProductIds();
+    return (
+      subscribed.length > 0 &&
+      subscribed.length === selected.length &&
+      subscribed.every((id) => selected.includes(id))
+    );
   });
+
+  private readonly feedQuery = computed(() => {
+    const slugs = this.selectedProductIds()
+      .map((id) => this.getProductById(id)?.slug)
+      .filter(Boolean);
+    return slugs.length > 0 ? `?products=${slugs.join(',')}` : '';
+  });
+
+  protected readonly rssUrl = computed(() => `/rss${this.feedQuery()}`);
+  protected readonly calendarUrl = computed(() => `/calendar.ics${this.feedQuery()}`);
+
+  protected readonly resultsAnnouncement = computed(() => {
+    if (this.notificationService.loading()) return '';
+    const count = this.filteredNotifications().length;
+    const noun = count === 1 ? 'notification' : 'notifications';
+    if (!this.searching()) return `Showing ${count} ${noun}`;
+    return `${count} ${noun} ${count === 1 ? 'matches' : 'match'} "${this.searchQuery()}"`;
+  });
+
+  constructor() {
+    // Load all notices the first time a search is made
+    effect(() => {
+      if (this.searching() && this.allNotices() === null) {
+        untracked(() => {
+          this.allNotices.set([]);
+          this.notificationService
+            .loadNoticesSince(null)
+            .then((notices) => this.allNotices.set(notices));
+        });
+      }
+    });
+
+    // Load the user's subscriptions so they can filter to "My products"
+    effect(() => {
+      if (this.userService.user() && !this.subscriptionService.isLoaded()) {
+        untracked(() => this.subscriptionService.loadSubscriptions());
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.loadData();
@@ -464,9 +222,8 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
-    if (this.intersectionObserver) {
-      this.intersectionObserver.disconnect();
-    }
+    this.intersectionObserver?.disconnect();
+    clearTimeout(this.searchDebounce);
   }
 
   private async loadData(): Promise<void> {
@@ -486,10 +243,7 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
     // Only setup intersection observer in browser environment
     if (!this.isBrowser) return;
 
-    // Disconnect existing observer
-    if (this.intersectionObserver) {
-      this.intersectionObserver.disconnect();
-    }
+    this.intersectionObserver?.disconnect();
 
     // Wait for the loadMoreTrigger to be available
     setTimeout(() => {
@@ -500,6 +254,7 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
           const [entry] = entries;
           if (
             entry.isIntersecting &&
+            !this.searching() &&
             this.notificationService.hasMoreNotifications() &&
             !this.notificationService.loading() &&
             !this.isLoadingMore
@@ -532,23 +287,48 @@ export class Home implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  private updateQuery(params: { products?: string[]; q?: string }): void {
+    const queryParams: Record<string, string | null> = {};
+    if (params.products) queryParams['products'] = params.products.join(',') || null;
+    if (params.q !== undefined) queryParams['q'] = params.q || null;
+    this.router.navigate([], { queryParams, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+
+  private slugsFor(ids: string[]): string[] {
+    return ids.map((id) => this.getProductById(id)?.slug).filter((slug): slug is string => !!slug);
+  }
+
   toggleAllProducts(): void {
-    this.selectedProductIds.set([]);
-    // Don't reload data for filter changes - just use the computed filtered notifications
+    this.updateQuery({ products: [] });
   }
 
   toggleProduct(productId: string): void {
-    this.selectedProductIds.update((ids) => {
-      if (ids.includes(productId)) {
-        return ids.filter((id) => id !== productId);
-      } else {
-        return [...ids, productId];
-      }
-    });
-    // Don't reload data for filter changes - just use the computed filtered notifications
+    const ids = this.selectedProductIds();
+    const next = ids.includes(productId) ? ids.filter((id) => id !== productId) : [...ids, productId];
+    this.updateQuery({ products: this.slugsFor(next) });
+  }
+
+  showMyProducts(): void {
+    this.updateQuery({ products: this.slugsFor(this.subscribedProductIds()) });
+  }
+
+  onSearchInput(value: string): void {
+    clearTimeout(this.searchDebounce);
+    this.searchDebounce = setTimeout(() => this.updateQuery({ q: value.trim() }), 250);
+  }
+
+  clearSearch(input: HTMLInputElement): void {
+    input.value = '';
+    clearTimeout(this.searchDebounce);
+    this.updateQuery({ q: '' });
+    input.focus();
   }
 
   getProductById(id: string): Product | undefined {
     return this.productService.allProducts().find((p) => p.id === id);
   }
+
+  protected readonly healthLabels = HEALTH_LABELS;
+  protected readonly severityOf = severityOf;
+  protected readonly isOngoing = isOngoing;
 }
