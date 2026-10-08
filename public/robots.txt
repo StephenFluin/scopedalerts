@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin
+Disallow: /subscribe
+Disallow: /embed/
+Disallow: /api/
+Disallow: /notifications/*/edit
+
+Sitemap: https://alerts.fluin.io/sitemap.xml

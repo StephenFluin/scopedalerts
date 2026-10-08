@@ -4,162 +4,171 @@ import {
   isMainModule,
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { join } from 'node:path';
 import { SITE_ORIGIN } from './app/services/canonical.service';
-const { firebaseConfig } = await import('./app/config/firebase.config');
+import { productHealth } from './app/utils/notice.utils';
+import {
+  badgeHealth,
+  renderBadge,
+  renderCalendar,
+  renderEmbed,
+  renderRss,
+  renderSitemap,
+} from './server/feeds';
+import { getSiteData, resolveProducts } from './server/site-data';
+import { summarizeHandler } from './server/summarize';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-// Enable trust proxy for proper IP detection
-app.set('trust proxy', true);
+app.disable('x-powered-by');
 
-// CORS middleware
+/**
+ * Security headers for every response.
+ */
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-  );
-
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
-
-// Parse JSON bodies
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-/**
- * RSS endpoint - generates RSS feed for notifications
- */
-app.get('/rss', async (req, res) => {
-  try {
-    const productsParam = req.query['products'] as string;
-    const productSlugs = productsParam ? productsParam.split(',').map((s) => s.trim()) : [];
-
-    // Firebase data fetching
-    let notifications: any[] = [];
-
-    if (typeof window === 'undefined') {
-      // Server-side Firebase initialization
-      try {
-        const { initializeApp } = await import('firebase/app');
-        const { getDatabase, ref, get, query, orderByChild } = await import('firebase/database');
-
-        // import firebaseConfig
-
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-        const noticesRef = ref(database, 'notices');
-        const snapshot = await get(query(noticesRef, orderByChild('datetime')));
-
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          notifications = Object.keys(data)
-            .map((key) => ({
-              id: key,
-              ...data[key],
-            }))
-            .filter((notification) => {
-              if (productSlugs.length === 0) return true;
-              return notification.affectedProducts?.some((product: string) =>
-                productSlugs.includes(product)
-              );
-            })
-            .map((notification) => ({
-              title: notification.title,
-              description: notification.description,
-              link: `${SITE_ORIGIN}/notifications/${notification.slug}`,
-              pubDate: new Date(notification.datetime),
-              guid: notification.slug,
-            }));
-        }
-      } catch (error) {
-        console.warn('Firebase not available:', error);
-      }
-    }
-
-    // Filter notifications based on products if specified
-    let filteredNotifications = notifications;
-
-    const rssXml = generateRSSFeed(filteredNotifications, productSlugs);
-
-    res.set({
-      'Content-Type': 'application/rss+xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
-    });
-    res.send(rssXml);
-  } catch (error) {
-    console.error('Error generating RSS feed:', error);
-    res.status(500).json({ error: 'Failed to generate RSS feed' });
-  }
-});
-
-/**
- * Generate RSS XML from notifications
- */
-function generateRSSFeed(notifications: any[], productSlugs: string[] = []): string {
-  const baseUrl = SITE_ORIGIN;
-  const title =
-    productSlugs.length > 0
-      ? `ScopedAlerts - ${productSlugs.join(', ')} Notifications`
-      : 'ScopedAlerts - All Notifications';
-
-  const description =
-    productSlugs.length > 0
-      ? `Product notifications for ${productSlugs.join(', ')}`
-      : 'All product notifications and updates';
-
-  let rssItems = '';
-
-  notifications.forEach((notification) => {
-    rssItems += `
-    <item>
-      <title><![CDATA[${notification.title}]]></title>
-      <description><![CDATA[${notification.description}]]></description>
-      <link>${notification.link}</link>
-      <guid isPermaLink="false">${notification.guid}</guid>
-      <pubDate>${notification.pubDate.toUTCString()}</pubDate>
-    </item>`;
+  res.set({
+    'Strict-Transport-Security': 'max-age=63072000; includeSubDomains',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+    // Allow the Firebase sign-in popup to talk back to this window
+    'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    'Content-Security-Policy': "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
   });
+  next();
+});
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title><![CDATA[${title}]]></title>
-    <description><![CDATA[${description}]]></description>
-    <link>${baseUrl}</link>
-    <atom:link href="${baseUrl}/rss${
-    productSlugs.length > 0 ? '?products=' + productSlugs.join(',') : ''
-  }" rel="self" type="application/rss+xml"/>
-    <language>en-us</language>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <generator>ScopedAlerts</generator>
-    <webMaster>stephen@fluin.io (Stephen Fluin)</webMaster>
-    <managingEditor>stephen@fluin.io (Stephen Fluin)</managingEditor>
-    <category>Technology</category>
-    <category>Notifications</category>
-    <ttl>60</ttl>${rssItems}
-  </channel>
-</rss>`;
+/** Public, read-only feeds can be fetched cross-origin. */
+function publicFeed(maxAgeSeconds: number) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    res.set({
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': `public, max-age=${maxAgeSeconds}`,
+    });
+    next();
+  };
+}
+
+/** Wraps an async route so failures become a 500 instead of an unhandled rejection. */
+function route(handler: (req: Request, res: Response) => Promise<void>) {
+  return (req: Request, res: Response, next: NextFunction) => handler(req, res).catch(next);
 }
 
 /**
- * Serve static files from /browser
+ * RSS feed of notifications, optionally filtered with ?products=slug-a,slug-b
+ */
+app.get(
+  '/rss',
+  publicFeed(300),
+  route(async (req, res) => {
+    const data = await getSiteData();
+    res.type('application/rss+xml; charset=utf-8').send(renderRss(data, resolveProducts(data, req.query['products'])));
+  })
+);
+
+/**
+ * iCalendar feed of maintenance windows, optionally filtered with ?products=slug-a,slug-b
+ */
+app.get(
+  '/calendar.ics',
+  publicFeed(300),
+  route(async (req, res) => {
+    const data = await getSiteData();
+    res
+      .type('text/calendar; charset=utf-8')
+      .send(renderCalendar(data, resolveProducts(data, req.query['products'])));
+  })
+);
+
+app.get(
+  '/sitemap.xml',
+  publicFeed(3600),
+  route(async (req, res) => {
+    res.type('application/xml; charset=utf-8').send(renderSitemap(await getSiteData()));
+  })
+);
+
+/**
+ * Status badge for a product, e.g. <img src="https://alerts.fluin.io/badge/my-product.svg">
+ */
+app.get(
+  '/badge/:slug.svg',
+  publicFeed(60),
+  route(async (req, res) => {
+    const data = await getSiteData();
+    const product = data.productsBySlug.get(String(req.params['slug']));
+    res
+      .status(product ? 200 : 404)
+      .type('image/svg+xml; charset=utf-8')
+      .send(renderBadge(product?.name ?? 'ScopedAlerts', product ? badgeHealth(data, product) : null));
+  })
+);
+
+/**
+ * Embeddable status card for a product, meant for an <iframe>.
+ */
+app.get(
+  '/embed/:slug',
+  route(async (req, res) => {
+    const data = await getSiteData();
+    const product = data.productsBySlug.get(String(req.params['slug']));
+    if (!product) {
+      res.status(404).type('text/plain').send('Unknown product');
+      return;
+    }
+    res.set({
+      'Cache-Control': 'public, max-age=60',
+      // This page is meant to be framed anywhere, and needs no scripts
+      'Content-Security-Policy':
+        "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors *; base-uri 'none'",
+    });
+    res.type('text/html; charset=utf-8').send(renderEmbed(data, product));
+  })
+);
+
+/**
+ * Machine-readable status of every product.
+ */
+app.get(
+  '/api/status.json',
+  publicFeed(60),
+  route(async (req, res) => {
+    const data = await getSiteData();
+    res.json({
+      products: data.products.map((product) => ({
+        slug: product.slug,
+        name: product.name,
+        status: productHealth(data.notices, product.id),
+        url: `${SITE_ORIGIN}/?products=${product.slug}`,
+      })),
+    });
+  })
+);
+
+/**
+ * AI-drafted TL;DR and suggested products for a notification (admins only).
+ */
+app.post('/api/summarize', express.json({ limit: '64kb' }), summarizeHandler);
+
+/**
+ * Serve static files from /browser. Hashed build output is immutable; everything else
+ * (logo, robots.txt, ...) may change between deploys.
  */
 app.use(
   express.static(browserDistFolder, {
-    maxAge: '1y',
     index: false,
     redirect: false,
+    setHeaders: (res, filePath) => {
+      const hashed = /-[A-Za-z0-9_-]{8}\.(js|css)$/.test(filePath);
+      res.setHeader(
+        'Cache-Control',
+        hashed ? 'public, max-age=31536000, immutable' : 'public, max-age=3600'
+      );
+    },
   })
 );
 
