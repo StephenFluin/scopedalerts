@@ -9,14 +9,16 @@ import {
   effect,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { form, required, submit, FormField, schema } from '@angular/forms/signals';
+import { form, required, maxLength, submit, FormField, schema } from '@angular/forms/signals';
 import { DatePipe } from '@angular/common';
 import { NotificationService } from '../services/notification.service';
 import { ProductService } from '../services/product.service';
 import { UserService } from '../services/user.service';
-import { Notice } from '../models/notice';
+import { Notice, NoticeSeverity, NoticeStatus } from '../models/notice';
+import { ToastService } from '../services/toast.service';
 import { ValidationErrorsComponent } from '../components/validation-errors';
-import { validateSlugPattern, generateSlug } from '../utils';
+import { MarkdownPipe } from '../shared/markdown.pipe';
+import { validateSlugPattern, generateSlug, SEVERITY_LABELS } from '../utils';
 
 // Interface for the Signal Form
 interface NotificationFormData {
@@ -24,6 +26,10 @@ interface NotificationFormData {
   slug: string;
   description: string;
   datetime: string;
+  severity: NoticeSeverity;
+  status: NoticeStatus;
+  endsAt: string;
+  summary: string;
 }
 
 // Notification form schema
@@ -32,6 +38,7 @@ const notificationSchema = schema<NotificationFormData>((path) => {
   required(path.slug, { message: 'Slug is required' });
   required(path.description, { message: 'Description is required' });
   required(path.datetime, { message: 'Date and time are required' });
+  maxLength(path.summary, 1000, { message: 'Summary must be no more than 1000 characters' });
 
   validateSlugPattern(path.slug);
 });
@@ -41,7 +48,7 @@ const notificationSchema = schema<NotificationFormData>((path) => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './edit-notification.html',
   styleUrls: ['./edit-notification.scss'],
-  imports: [RouterLink, FormField, ValidationErrorsComponent],
+  imports: [RouterLink, FormField, ValidationErrorsComponent, MarkdownPipe],
 })
 export class EditNotification implements OnInit {
   private route = inject(ActivatedRoute);
@@ -49,6 +56,11 @@ export class EditNotification implements OnInit {
   protected readonly notificationService = inject(NotificationService);
   protected readonly productService = inject(ProductService);
   protected readonly userService = inject(UserService);
+  private toast = inject(ToastService);
+
+  protected readonly severityOptions = Object.entries(SEVERITY_LABELS) as [NoticeSeverity, string][];
+  protected readonly showPreview = signal(false);
+  protected readonly drafting = signal(false);
 
   protected readonly isLoading = signal(true);
   protected readonly isSaving = signal(false);
@@ -65,6 +77,10 @@ export class EditNotification implements OnInit {
     slug: '',
     description: '',
     datetime: '',
+    severity: 'info',
+    status: 'resolved',
+    endsAt: '',
+    summary: '',
   }));
 
   protected notificationForm = form(this.notificationData, notificationSchema);
@@ -126,6 +142,12 @@ export class EditNotification implements OnInit {
               slug: notification.slug,
               description: notification.description,
               datetime: formattedDatetime || '',
+              severity: notification.severity ?? 'info',
+              status: notification.status ?? 'resolved',
+              endsAt: notification.endsAt
+                ? new DatePipe('en-US').transform(new Date(notification.endsAt), 'yyyy-MM-ddTHH:mm') || ''
+                : '',
+              summary: notification.summary ?? '',
             }));
 
             this.selectedProducts.set(notification.affectedProducts);
@@ -185,16 +207,29 @@ export class EditNotification implements OnInit {
           description: formValue.description,
           datetime: new Date(formValue.datetime).toISOString(),
           affectedProducts: this.selectedProducts(),
+          severity: formValue.severity,
+          status: formValue.status,
         };
+        // Optional fields: omitted on create, cleared (null) on update when left empty
+        const endsAt = formValue.endsAt ? new Date(formValue.endsAt).toISOString() : null;
+        const summary = formValue.summary.trim() || null;
 
         if (isNew) {
-          await this.notificationService.createNotification(noticeData);
+          await this.notificationService.createNotification({
+            ...noticeData,
+            ...(endsAt && { endsAt }),
+            ...(summary && { summary }),
+          });
         } else {
           const existingNotification = await this.notificationService.getNotificationBySlug(
             this.originalSlug()
           );
           if (existingNotification) {
-            await this.notificationService.updateNotification(existingNotification.id, noticeData);
+            await this.notificationService.updateNotification(existingNotification.id, {
+              ...noticeData,
+              endsAt,
+              summary,
+            } as Partial<Notice>);
           }
         }
 
@@ -209,6 +244,55 @@ export class EditNotification implements OnInit {
         };
       }
     });
+  }
+
+  /** Asks the server (Claude) to draft a TL;DR and suggest affected products. */
+  protected async draftSummary(): Promise<void> {
+    const { title, description } = this.notificationData();
+    if (!description.trim()) {
+      this.toast.info('Write a description first');
+      return;
+    }
+
+    this.drafting.set(true);
+    try {
+      const idToken = await this.userService.getIdToken();
+      const response = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({
+          title,
+          description,
+          products: this.productService
+            .allProducts()
+            .map(({ id, name, description }) => ({ id, name, description })),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error ?? 'Summary generation failed');
+      }
+
+      this.notificationData.update((data) => ({ ...data, summary: result.summary }));
+
+      const suggested: string[] = result.suggestedProductIds ?? [];
+      const missing = suggested.filter((id) => !this.selectedProducts().includes(id));
+      if (this.selectedProducts().length === 0) {
+        this.selectedProducts.set(suggested);
+      } else if (missing.length > 0) {
+        const names = missing
+          .map((id) => this.productService.allProducts().find((p) => p.id === id)?.name)
+          .join(', ');
+        this.toast.show(`Also affects ${names}?`, 'info', 8000, {
+          label: 'Add',
+          callback: () => this.selectedProducts.update((ids) => [...ids, ...missing]),
+        });
+      }
+    } catch (error) {
+      this.toast.error(error instanceof Error ? error.message : 'Summary generation failed');
+    } finally {
+      this.drafting.set(false);
+    }
   }
 
   protected toggleProduct(productId: string): void {

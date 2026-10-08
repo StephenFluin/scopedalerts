@@ -160,6 +160,12 @@ export class UserService {
     }
   }
 
+  /** Firebase ID token for the signed-in user, for authenticating calls to our own server. */
+  async getIdToken(): Promise<string | null> {
+    const firebaseAuth = await this.firebaseService.getAuth();
+    return (await firebaseAuth?.currentUser?.getIdToken()) ?? null;
+  }
+
   private async checkUserRole(uid: string): Promise<UserRole> {
     try {
       const firebaseDatabase = await this.firebaseService.getDatabase();

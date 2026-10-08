@@ -183,6 +183,16 @@ app.use((req, res, next) => {
 });
 
 /**
+ * Plain error responses, without Express's default stack traces.
+ */
+app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+  const status = Number(error?.status ?? error?.statusCode) || 500;
+  if (status >= 500) console.error(error);
+  if (res.headersSent) return next(error);
+  res.status(status).type('text/plain').send(status >= 500 ? 'Internal Server Error' : 'Bad Request');
+});
+
+/**
  * Start the server if this module is the main entry point, or it is ran via PM2.
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */

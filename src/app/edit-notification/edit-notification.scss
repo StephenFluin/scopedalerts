@@ -47,3 +47,44 @@
     padding: var(--spacing-md);
   }
 }
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--spacing-md);
+}
+
+.link-btn {
+  border: none;
+  background: none;
+  color: var(--color-link);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+.markdown-preview {
+  min-height: 9rem;
+  padding: var(--spacing-md);
+  border: var(--form-field-border);
+  border-radius: var(--form-field-radius);
+  background: var(--color-surface);
+}
+
+.products-fieldset {
+  border: none;
+  padding: 0;
+  margin-inline: 0;
+
+  legend {
+    padding: 0;
+    margin-bottom: var(--spacing-sm);
+    font-weight: var(--font-weight-medium);
+  }
+}

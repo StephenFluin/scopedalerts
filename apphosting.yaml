@@ -21,3 +21,10 @@ runConfig:
   # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
   # - variable: MY_SECRET
   #   secret: mySecretRef
+
+  # Enables "Draft with AI" summaries in the notification editor (/api/summarize).
+  # Create the secret first: firebase apphosting:secrets:set anthropic-api-key
+  # - variable: ANTHROPIC_API_KEY
+  #   secret: anthropic-api-key
+  #   availability:
+  #     - RUNTIME
