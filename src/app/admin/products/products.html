@@ -58,7 +58,7 @@
           placeholder="A comprehensive description of what this product does..."
         ></textarea>
         <app-validation-errors
-          [formField]="addProductForm.description"
+          [field]="addProductForm.description"
           [submitted]="addFormSubmitted()"
         />
       </div>
@@ -117,7 +117,7 @@
                   class="form-input"
                 />
                 <app-validation-errors
-                  [formField]="editProductForm.name"
+                  [field]="editProductForm.name"
                   [submitted]="editFormSubmitted()"
                 />
               </div>
@@ -131,7 +131,7 @@
                   class="form-input"
                 />
                 <app-validation-errors
-                  [formField]="editProductForm.slug"
+                  [field]="editProductForm.slug"
                   [submitted]="editFormSubmitted()"
                 />
               </div>
@@ -145,7 +145,7 @@
                 class="form-textarea"
               ></textarea>
               <app-validation-errors
-                [formField]="editProductForm.description"
+                [field]="editProductForm.description"
                 [submitted]="editFormSubmitted()"
               />
             </div>
