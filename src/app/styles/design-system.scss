@@ -72,6 +72,19 @@
   --color-border: var(--color-gray-200);
   --color-link: var(--color-primary);
   --color-link-hover: var(--color-primary-hover);
+
+  /* Notice severity / product health (text on tinted background, WCAG AA) */
+  --color-operational: #1b5e20;
+  --color-operational-bg: #e8f5e9;
+  --color-info: #0d47a1;
+  --color-info-bg: #e3f2fd;
+  --color-maintenance: #4a148c;
+  --color-maintenance-bg: #f3e5f5;
+  --color-degraded: #8a4b00;
+  --color-degraded-bg: #fff3e0;
+  --color-outage: #b71c1c;
+  --color-outage-bg: #ffebee;
+  --color-skeleton: #eceff1;
 }
 
 /* Dark Theme Colors - WCAG AA Compliant */
@@ -89,6 +102,18 @@ html.dark {
   --color-success: #66bb6a;
   --color-warning: #ffa726;
   --color-error: #ef5350;
+
+  --color-operational: #a5d6a7;
+  --color-operational-bg: rgba(102, 187, 106, 0.16);
+  --color-info: #90caf9;
+  --color-info-bg: rgba(66, 165, 245, 0.16);
+  --color-maintenance: #ce93d8;
+  --color-maintenance-bg: rgba(171, 71, 188, 0.18);
+  --color-degraded: #ffcc80;
+  --color-degraded-bg: rgba(255, 167, 38, 0.16);
+  --color-outage: #ef9a9a;
+  --color-outage-bg: rgba(239, 83, 80, 0.18);
+  --color-skeleton: rgba(255, 255, 255, 0.08);
 }
 
 /* Component Design Tokens - Minimal */
@@ -108,7 +133,7 @@ html.dark {
   --form-field-border: 1px solid var(--color-border);
 
   /* Focus ring for accessibility */
-  --focus-ring: 0 0 0 3px rgba(63, 81, 181, 0.2);
+  --focus-ring: 0 0 0 3px var(--color-primary);
 }
 
 /* Utility classes */

@@ -1,5 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { UserService } from '../services/user.service';
 import { ThemeService } from '../services/theme.service';
 import { ToastService } from '../services/toast.service';
@@ -28,7 +28,8 @@ import { ToastService } from '../services/toast.service';
       height: var(--navbar-height);
     }
 
-    .nav-brand h1 {
+    .nav-brand .brand-name {
+      display: block;
       margin: 0;
       font-size: var(--font-size-2xl);
       font-weight: var(--font-weight-semibold);
@@ -128,7 +129,23 @@ import { ToastService } from '../services/toast.service';
       gap: var(--spacing-md);
     }
 
+    .nav-link {
+      color: var(--color-text-primary);
+      font-weight: var(--font-weight-medium);
+      text-decoration: none;
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: var(--color-primary);
+    }
+
     .user-name {
+      border: none;
+      background: none;
+      font: inherit;
       font-weight: var(--font-weight-medium);
       color: var(--color-text-primary);
       cursor: pointer;
@@ -191,7 +208,7 @@ import { ToastService } from '../services/toast.service';
         padding: 0 var(--spacing-sm);
       }
       
-      .nav-brand h1 {
+      .nav-brand .brand-name {
         font-size: var(--font-size-xl);
       }
       
@@ -210,7 +227,7 @@ import { ToastService } from '../services/toast.service';
       }
     }
   `,
-  imports: [RouterLink],
+  imports: [RouterLink, RouterLinkActive],
 })
 export class Navigation {
   protected readonly userService = inject(UserService);
@@ -238,7 +255,7 @@ export class Navigation {
       await this.userService.signInWithGoogle();
     } catch (error) {
       console.error('Sign in failed:', error);
-      // TODO: Show error message to user
+      this.toastService.error('Sign in failed. Please try again.');
     }
   }
 
@@ -247,7 +264,7 @@ export class Navigation {
       await this.userService.signOut();
     } catch (error) {
       console.error('Sign out failed:', error);
-      // TODO: Show error message to user
+      this.toastService.error('Sign out failed. Please try again.');
     }
   }
 

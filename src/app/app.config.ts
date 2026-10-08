@@ -10,6 +10,7 @@ import { provideClientHydration, withEventReplay, withNoIncrementalHydration } f
 import { AnalyticsService } from './services/analytics.service';
 import { ThemeService } from './services/theme.service';
 import { CanonicalService } from './services/canonical.service';
+import { SeoService } from './services/seo.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,6 +22,7 @@ export const appConfig: ApplicationConfig = {
       inject(AnalyticsService);
       inject(ThemeService);
       inject(CanonicalService);
+      inject(SeoService);
     }),
   ],
 };

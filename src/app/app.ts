@@ -1,9 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Navigation } from './components/navigation';
 import { Footer } from './components/footer';
 import { ToastContainer } from './components/toast-container';
-import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -22,4 +21,10 @@ import { ThemeService } from './services/theme.service';
   `,
   imports: [RouterOutlet, Navigation, Footer, ToastContainer],
 })
-export class App {}
+export class App {
+  protected skipToContent(event: Event): void {
+    // A plain #fragment link would resolve against <base href> and leave the page
+    event.preventDefault();
+    document.getElementById('main-content')?.focus();
+  }
+}

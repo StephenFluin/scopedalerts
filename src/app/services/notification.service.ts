@@ -2,7 +2,6 @@ import { Injectable, signal, inject, PLATFORM_ID, PendingTasks } from '@angular/
 import { isPlatformBrowser } from '@angular/common';
 import { Notice } from '../models/notice';
 import { FirebaseService } from './firebase.service';
-import firebase from 'firebase/compat/app';
 
 @Injectable({
   providedIn: 'root',
@@ -117,6 +116,40 @@ export class NotificationService {
       taskCleanup();
     }
     return [];
+  }
+
+  /**
+   * Loads every notice published since the given ISO date, newest first, without touching
+   * the paginated feed. Used for status history and search.
+   */
+  async loadNoticesSince(sinceIso: string | null): Promise<Notice[]> {
+    const taskCleanup = this.pendingTasks.add();
+    try {
+      const firebaseDatabase = await this.firebaseService.getDatabase();
+      const databaseMethods = await this.firebaseService.getDatabaseMethods();
+      if (!firebaseDatabase || !databaseMethods) return [];
+
+      const { ref, get, query, orderByChild, startAt } = databaseMethods;
+      const noticesRef = ref(firebaseDatabase, 'notices');
+      const snapshot = await get(
+        sinceIso ? query(noticesRef, orderByChild('datetime'), startAt(sinceIso)) : noticesRef
+      );
+      const data: Record<string, any> = snapshot.val() ?? {};
+      return Object.keys(data)
+        .map((key) => ({
+          id: key,
+          ...data[key],
+          affectedProducts: data[key].affectedProducts ?? [],
+          createdAt: new Date(data[key].createdAt),
+          updatedAt: new Date(data[key].updatedAt),
+        }))
+        .sort((a, b) => b.datetime.localeCompare(a.datetime));
+    } catch (error) {
+      console.error('Error loading notices:', error);
+      return [];
+    } finally {
+      taskCleanup();
+    }
   }
 
   async loadMoreNotifications(limit = 20): Promise<Notice[]> {

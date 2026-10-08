@@ -1,12 +1,16 @@
-<nav class="navbar">
+<nav class="navbar" aria-label="Main">
   <div class="nav-content">
     <div class="nav-brand">
       <a routerLink="/" class="brand-link">
-        <h1>ScopedAlerts</h1>
+        <span class="brand-name">ScopedAlerts</span>
       </a>
     </div>
 
     <div class="nav-actions">
+      <a routerLink="/status" routerLinkActive="active" ariaCurrentWhenActive="page" class="nav-link">
+        Status
+      </a>
+
       <button
         type="button"
         class="theme-toggle"
@@ -28,13 +32,14 @@
         </button>
         } @else {
         <div class="user-info">
-          <span
+          <button
+            type="button"
             class="user-name"
-            [title]="userService.user()?.uid || ''"
+            title="Copy your user ID"
             (click)="copyUidToClipboard()"
           >
             {{ userService.user()?.displayName }}@if (userService.isAdmin()) { (Admin)}
-          </span>
+          </button>
           <button
             type="button"
             class="logout-btn"

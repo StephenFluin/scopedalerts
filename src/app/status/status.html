@@ -1,0 +1,64 @@
+<div class="status-page">
+  <header class="status-header">
+    <h1>Product Status</h1>
+    @if (!loading()) {
+    <p class="overall" [class]="'overall health-' + overall()" role="status">{{ overallLabel() }}</p>
+    }
+  </header>
+
+  @if (loading()) {
+  <div class="rows" role="status" aria-label="Loading status">
+    @for (i of [1, 2, 3]; track i) {
+    <span class="skeleton skeleton-row"></span>
+    }
+  </div>
+  } @else {
+  <ul class="rows">
+    @for (row of rows(); track row.product.id) {
+    <li class="row">
+      <div class="row-head">
+        <h2>
+          <a routerLink="/" [queryParams]="{ products: row.product.slug }">{{ row.product.name }}</a>
+        </h2>
+        <app-health-pill [health]="row.health" />
+      </div>
+
+      <div class="history" role="img" [attr.aria-label]="historySummary(row)">
+        @for (day of row.days; track day.date) {
+        <span class="day" [class]="'day day-' + day.health" [title]="day.label"></span>
+        }
+      </div>
+      <div class="history-legend" aria-hidden="true">
+        <span>90 days ago</span>
+        <span>{{ historySummary(row) }}</span>
+        <span>Today</span>
+      </div>
+
+      <details class="share">
+        <summary>Badge &amp; embed</summary>
+        <div class="share-body">
+          <img [src]="'/badge/' + row.product.slug + '.svg'" [alt]="row.product.name + ' status badge'" height="20" />
+          <label [for]="'badge-' + row.product.id">Markdown badge</label>
+          <div class="snippet">
+            <input readonly [id]="'badge-' + row.product.id" [value]="row.badgeSnippet" />
+            <button type="button" (click)="copy(row.badgeSnippet, $event)">Copy</button>
+          </div>
+          <label [for]="'embed-' + row.product.id">Embeddable card</label>
+          <div class="snippet">
+            <input readonly [id]="'embed-' + row.product.id" [value]="row.embedSnippet" />
+            <button type="button" (click)="copy(row.embedSnippet, $event)">Copy</button>
+          </div>
+        </div>
+      </details>
+    </li>
+    } @empty {
+    <li class="empty-state">No products yet.</li>
+    }
+  </ul>
+
+  <p class="feeds">
+    Machine-readable: <a href="/api/status.json">status.json</a> ·
+    <a href="/rss">RSS</a> · <a href="/calendar.ics">Maintenance calendar</a>
+  </p>
+  }
+</div>

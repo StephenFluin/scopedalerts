@@ -1,7 +1,8 @@
 <div class="app-container">
+  <a class="skip-link" href="#main-content" (click)="skipToContent($event)">Skip to content</a>
   <app-navigation />
 
-  <main class="main-content">
+  <main id="main-content" class="main-content" tabindex="-1">
     <router-outlet />
   </main>
 
