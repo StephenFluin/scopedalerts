@@ -3,12 +3,45 @@
     "products": {
       ".read": true,
       ".write": "auth != null && root.child('admins').child(auth.uid).exists()",
-      ".indexOn": ["slug"]
+      ".indexOn": ["slug"],
+      "$productId": {
+        ".validate": "newData.hasChildren(['name', 'slug', 'description'])",
+        "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100" },
+        "slug": { ".validate": "newData.isString() && newData.val().matches(/^[a-z0-9-]+$/)" },
+        "description": { ".validate": "newData.isString() && newData.val().length <= 500" },
+        "$other": { ".validate": false }
+      }
     },
     "notices": {
       ".read": true,
       ".write": "auth != null && root.child('admins').child(auth.uid).exists()",
-      ".indexOn": ["datetime", "slug"]
+      ".indexOn": ["datetime", "slug"],
+      "$noticeId": {
+        ".validate": "newData.hasChildren(['title', 'slug', 'description', 'datetime', 'affectedProducts'])",
+        "title": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200" },
+        "slug": { ".validate": "newData.isString() && newData.val().matches(/^[a-z0-9-]+$/)" },
+        "description": { ".validate": "newData.isString() && newData.val().length <= 20000" },
+        "datetime": { ".validate": "newData.isString() && newData.val().matches(/^\\d{4}-\\d{2}-\\d{2}T/)" },
+        "endsAt": { ".validate": "newData.isString() && newData.val().matches(/^\\d{4}-\\d{2}-\\d{2}T/)" },
+        "severity": { ".validate": "newData.isString() && newData.val().matches(/^(info|maintenance|degraded|outage)$/)" },
+        "status": { ".validate": "newData.isString() && newData.val().matches(/^(ongoing|resolved)$/)" },
+        "summary": { ".validate": "newData.isString() && newData.val().length <= 1000" },
+        "affectedProducts": {
+          "$index": { ".validate": "newData.isString()" }
+        },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "updatedAt": { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+    "reactions": {
+      ".read": true,
+      "$noticeId": {
+        "$userId": {
+          ".write": "auth != null && auth.uid == $userId",
+          ".validate": "newData.val() === true && root.child('notices').child($noticeId).exists()"
+        }
+      }
     },
     "admins": {
       ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
@@ -19,8 +52,9 @@
         ".read": "auth != null && auth.uid == $userId",
         ".write": "auth != null && auth.uid == $userId",
         "subscriptions": {
-          ".read": "auth != null && auth.uid == $userId",
-          ".write": "auth != null && auth.uid == $userId"
+          "$productId": {
+            ".validate": "newData.val() === true && root.child('products').child($productId).exists()"
+          }
         }
       }
     }

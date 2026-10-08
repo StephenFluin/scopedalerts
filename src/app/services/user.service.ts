@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, signal, computed, inject, PLATFORM_ID, isDevMode } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { User, UserRole } from '../models/user';
 import { FirebaseService } from './firebase.service';
@@ -80,8 +80,11 @@ export class UserService {
         this.authInitialized = true;
       }
     } catch (error) {
-      console.warn('Firebase not available, using mock data:', error);
-      this.setMockUser('admin');
+      console.warn('Firebase auth not available:', error);
+      // Only fake a signed-in admin during local development
+      if (isDevMode()) {
+        this.setMockUser('admin');
+      }
     }
   }
 
@@ -104,15 +107,11 @@ export class UserService {
         const provider = new authMethods.GoogleAuthProvider();
         await authMethods.signInWithPopup(firebaseAuth, provider);
         // User state will be updated via onAuthStateChanged listener
-      } else {
+      } else if (isDevMode()) {
         // Fallback to mock sign-in for development
-        console.log('Mock Google sign-in');
-        this.currentUser.set({
-          uid: 'mock-admin-uid',
-          email: 'admin@example.com',
-          displayName: 'Mock Admin User',
-          role: 'admin',
-        });
+        this.setMockUser('admin');
+      } else {
+        throw new Error('Sign-in is not available right now');
       }
     } catch (error) {
       console.error('Sign in failed:', error);
@@ -156,7 +155,6 @@ export class UserService {
   }
 
   private async checkUserRole(uid: string): Promise<UserRole> {
-    console.log('Checking role for UID:', uid);
     try {
       const firebaseDatabase = await this.firebaseService.getDatabase();
       const dbMethods = await this.firebaseService.getDatabaseMethods();
@@ -167,7 +165,7 @@ export class UserService {
         return snapshot.exists() ? 'admin' : 'user';
       } else {
         // Fallback to mock role checking for development
-        return uid.includes('admin') ? 'admin' : 'user';
+        return isDevMode() && uid.includes('admin') ? 'admin' : 'user';
       }
     } catch (error) {
       console.error('Error checking user role:', error);
