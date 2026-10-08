@@ -1,4 +1,4 @@
-import { customError, validate, FieldPath } from '@angular/forms/signals';
+import { validate, SchemaPath } from '@angular/forms/signals';
 
 /**
  * Regular expression pattern for valid URL slugs.
@@ -12,15 +12,15 @@ export const SLUG_PATTERN = /^[a-z0-9-]+$/;
  *
  * @param path The field path to validate
  */
-export function validateSlugPattern(path: FieldPath<string>): void {
+export function validateSlugPattern(path: SchemaPath<string>): void {
   validate(path, (ctx) => {
     const value = ctx.value();
 
     if (!SLUG_PATTERN.test(value)) {
-      return customError({
+      return {
         kind: 'pattern',
         message: 'Slug must contain only lowercase letters, numbers, and hyphens',
-      });
+      };
     }
 
     return null;

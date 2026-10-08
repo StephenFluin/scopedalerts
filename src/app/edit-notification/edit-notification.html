@@ -31,7 +31,7 @@
         <input
           type="text"
           id="title"
-          [field]="notificationForm.title"
+          [formField]="notificationForm.title"
           class="form-input"
           placeholder="Enter notification title"
         />
@@ -43,7 +43,7 @@
         <input
           type="text"
           id="slug"
-          [field]="notificationForm.slug"
+          [formField]="notificationForm.slug"
           class="form-input"
           placeholder="url-friendly-slug"
         />
@@ -55,7 +55,7 @@
         <input
           type="datetime-local"
           id="datetime"
-          [field]="notificationForm.datetime"
+          [formField]="notificationForm.datetime"
           class="form-input"
         />
         <app-validation-errors [field]="notificationForm.datetime" [submitted]="formSubmitted()" />
@@ -65,13 +65,13 @@
         <label for="description">Description *</label>
         <textarea
           id="description"
-          [field]="notificationForm.description"
+          [formField]="notificationForm.description"
           class="form-textarea"
           rows="6"
           placeholder="Enter detailed description of the notification"
         ></textarea>
         <app-validation-errors
-          [field]="notificationForm.description"
+          [formField]="notificationForm.description"
           [submitted]="formSubmitted()"
         />
       </div>

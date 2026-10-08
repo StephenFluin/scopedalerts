@@ -15,7 +15,7 @@ import {
   minLength,
   maxLength,
   submit,
-  Field,
+  FormField,
   schema,
 } from '@angular/forms/signals';
 import { ProductService } from '../../services/product.service';
@@ -53,7 +53,7 @@ const productSchema = schema<ProductFormData>((path) => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './products.html',
   styleUrls: ['./products.scss'],
-  imports: [RouterLink, Field, ValidationErrorsComponent],
+  imports: [RouterLink, FormField, ValidationErrorsComponent],
 })
 export class AdminProductsComponent implements OnInit {
   protected readonly productService = inject(ProductService);

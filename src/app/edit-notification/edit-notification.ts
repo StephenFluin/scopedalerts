@@ -9,7 +9,7 @@ import {
   effect,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { form, required, submit, Field, schema } from '@angular/forms/signals';
+import { form, required, submit, FormField, schema } from '@angular/forms/signals';
 import { DatePipe } from '@angular/common';
 import { NotificationService } from '../services/notification.service';
 import { ProductService } from '../services/product.service';
@@ -41,7 +41,7 @@ const notificationSchema = schema<NotificationFormData>((path) => {
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './edit-notification.html',
   styleUrls: ['./edit-notification.scss'],
-  imports: [RouterLink, Field, ValidationErrorsComponent],
+  imports: [RouterLink, FormField, ValidationErrorsComponent],
 })
 export class EditNotification implements OnInit {
   private route = inject(ActivatedRoute);

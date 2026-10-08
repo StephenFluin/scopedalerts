@@ -25,7 +25,7 @@
           <input
             type="text"
             id="add-name"
-            [field]="addProductForm.name"
+            [formField]="addProductForm.name"
             class="form-input"
             placeholder="My Awesome Product"
           />
@@ -40,7 +40,7 @@
           <input
             type="text"
             id="add-slug"
-            [field]="addProductForm.slug"
+            [formField]="addProductForm.slug"
             class="form-input"
             placeholder="my-awesome-product"
           />
@@ -53,12 +53,12 @@
         <div class="field-description">Brief description of the product</div>
         <textarea
           id="add-description"
-          [field]="addProductForm.description"
+          [formField]="addProductForm.description"
           class="form-textarea"
           placeholder="A comprehensive description of what this product does..."
         ></textarea>
         <app-validation-errors
-          [field]="addProductForm.description"
+          [formField]="addProductForm.description"
           [submitted]="addFormSubmitted()"
         />
       </div>
@@ -113,11 +113,11 @@
                 <input
                   type="text"
                   id="edit-name-{{ product.id }}"
-                  [field]="editProductForm.name"
+                  [formField]="editProductForm.name"
                   class="form-input"
                 />
                 <app-validation-errors
-                  [field]="editProductForm.name"
+                  [formField]="editProductForm.name"
                   [submitted]="editFormSubmitted()"
                 />
               </div>
@@ -127,11 +127,11 @@
                 <input
                   type="text"
                   id="edit-slug-{{ product.id }}"
-                  [field]="editProductForm.slug"
+                  [formField]="editProductForm.slug"
                   class="form-input"
                 />
                 <app-validation-errors
-                  [field]="editProductForm.slug"
+                  [formField]="editProductForm.slug"
                   [submitted]="editFormSubmitted()"
                 />
               </div>
@@ -141,11 +141,11 @@
               <label for="edit-description-{{ product.id }}">Description *</label>
               <textarea
                 id="edit-description-{{ product.id }}"
-                [field]="editProductForm.description"
+                [formField]="editProductForm.description"
                 class="form-textarea"
               ></textarea>
               <app-validation-errors
-                [field]="editProductForm.description"
+                [formField]="editProductForm.description"
                 [submitted]="editFormSubmitted()"
               />
             </div>
