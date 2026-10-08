@@ -14,6 +14,7 @@ export class UserService {
   private currentUser = signal<User | null>(null);
   private isLoading = signal(false);
   private authInitialized = false;
+  private authReady: Promise<void> | null = null;
 
   readonly user = this.currentUser.asReadonly();
   readonly loading = this.isLoading.asReadonly();
@@ -51,30 +52,35 @@ export class UserService {
     }
   }
 
-  private async initializeAuth(): Promise<void> {
-    if (this.authInitialized) {
-      return;
-    }
+  /** Resolves once Firebase has reported the initial auth state (and the user's role). */
+  private initializeAuth(): Promise<void> {
+    this.authReady ??= this.listenForAuthChanges();
+    return this.authReady;
+  }
 
+  private async listenForAuthChanges(): Promise<void> {
     try {
       if (this.firebaseService.isBrowserEnvironment()) {
         const firebaseAuth = await this.firebaseService.getAuth();
         const authMethods = await this.firebaseService.getAuthMethods();
 
         if (firebaseAuth && authMethods) {
-          // Listen for auth state changes
-          authMethods.onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
-            if (firebaseUser) {
-              const role = await this.checkUserRole(firebaseUser.uid);
-              this.currentUser.set({
-                uid: firebaseUser.uid,
-                email: firebaseUser.email || '',
-                displayName: firebaseUser.displayName || '',
-                role,
-              });
-            } else {
-              this.currentUser.set(null);
-            }
+          await new Promise<void>((resolve) => {
+            // Listen for auth state changes; the first callback is the restored session
+            authMethods.onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
+              if (firebaseUser) {
+                const role = await this.checkUserRole(firebaseUser.uid);
+                this.currentUser.set({
+                  uid: firebaseUser.uid,
+                  email: firebaseUser.email || '',
+                  displayName: firebaseUser.displayName || '',
+                  role,
+                });
+              } else {
+                this.currentUser.set(null);
+              }
+              resolve();
+            });
           });
         }
         this.authInitialized = true;

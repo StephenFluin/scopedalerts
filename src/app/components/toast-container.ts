@@ -14,12 +14,17 @@ import { ToastService } from '../services/toast.service';
         role="alert"
       >
         <div class="toast-content">
-          <span class="toast-icon">
+          <span class="toast-icon" aria-hidden="true">
             @switch (toast.type) { @case ('success') { ✅ } @case ('error') { ❌ } @case ('warning')
             { ⚠️ } @default { ℹ️ } }
           </span>
           <span class="toast-message">{{ toast.message }}</span>
         </div>
+        @if (toast.action; as action) {
+        <button type="button" class="toast-action" (click)="runAction(toast.id, action.callback)">
+          {{ action.label }}
+        </button>
+        }
         <button
           type="button"
           class="toast-close"
@@ -90,6 +95,18 @@ import { ToastService } from '../services/toast.service';
       line-height: var(--line-height-base);
     }
 
+    .toast-action {
+      background: none;
+      border: 1px solid currentColor;
+      border-radius: var(--radius-sm);
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+      font-weight: var(--font-weight-semibold);
+      margin-left: var(--spacing-md);
+      padding: 2px var(--spacing-sm);
+    }
+
     .toast-close {
       background: none;
       border: none;
@@ -139,8 +156,13 @@ import { ToastService } from '../services/toast.service';
       border-color: var(--color-primary-700);
     }
 
+    /* Dark theme uses light tinted backgrounds, so switch to dark text */
+    :host-context(html.dark) .toast {
+      color: #121212;
+    }
+
     /* Enhanced shadow for dark theme */
-    html.dark .toast {
+    :host-context(html.dark) .toast {
       box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.1);
     }
 
@@ -168,4 +190,9 @@ import { ToastService } from '../services/toast.service';
 })
 export class ToastContainer {
   protected readonly toastService = inject(ToastService);
+
+  protected runAction(id: string, callback: () => void): void {
+    this.toastService.remove(id);
+    callback();
+  }
 }

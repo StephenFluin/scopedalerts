@@ -176,7 +176,7 @@ a.product-tag {
 }
 
 // Dark mode styles
-html.dark {
+:host-context(html.dark) {
   .notification-content {
     background-color: rgba(255, 255, 255, 0.05);
   }
