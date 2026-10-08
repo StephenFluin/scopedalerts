@@ -8,7 +8,7 @@ import {
   effect,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../services/product.service';
 import { SubscriptionService } from '../services/subscription.service';
@@ -531,7 +531,7 @@ import { Product } from '../models/product';
       }
     `,
   ],
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
 })
 export class SubscribeComponent implements OnInit {
   private router = inject(Router);
