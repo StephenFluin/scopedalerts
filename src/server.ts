@@ -6,6 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { SITE_ORIGIN } from './app/services/canonical.service';
 const { firebaseConfig } = await import('./app/config/firebase.config');
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -76,7 +77,7 @@ app.get('/rss', async (req, res) => {
             .map((notification) => ({
               title: notification.title,
               description: notification.description,
-              link: `https://scopedalerts.example.com/notifications/${notification.slug}`,
+              link: `${SITE_ORIGIN}/notifications/${notification.slug}`,
               pubDate: new Date(notification.datetime),
               guid: notification.slug,
             }));
@@ -106,7 +107,7 @@ app.get('/rss', async (req, res) => {
  * Generate RSS XML from notifications
  */
 function generateRSSFeed(notifications: any[], productSlugs: string[] = []): string {
-  const baseUrl = 'https://scopedalerts.example.com'; // TODO: Make this configurable
+  const baseUrl = SITE_ORIGIN;
   const title =
     productSlugs.length > 0
       ? `ScopedAlerts - ${productSlugs.join(', ')} Notifications`

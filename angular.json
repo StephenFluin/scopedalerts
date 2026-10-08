@@ -60,7 +60,13 @@
             "ssr": {
               "entry": "src/server.ts"
             },
-            "namedChunks": true
+            "namedChunks": true,
+            "security": {
+              "allowedHosts": [
+                "alerts.fluin.io",
+                "localhost"
+              ]
+            }
           },
           "configurations": {
             "production": {
