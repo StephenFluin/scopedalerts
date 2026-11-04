@@ -60,7 +60,6 @@ export class EditNotification implements OnInit {
 
   protected readonly severityOptions = Object.entries(SEVERITY_LABELS) as [NoticeSeverity, string][];
   protected readonly showPreview = signal(false);
-  protected readonly drafting = signal(false);
 
   protected readonly isLoading = signal(true);
   protected readonly isSaving = signal(false);
@@ -244,55 +243,6 @@ export class EditNotification implements OnInit {
         };
       }
     });
-  }
-
-  /** Asks the server (Claude) to draft a TL;DR and suggest affected products. */
-  protected async draftSummary(): Promise<void> {
-    const { title, description } = this.notificationData();
-    if (!description.trim()) {
-      this.toast.info('Write a description first');
-      return;
-    }
-
-    this.drafting.set(true);
-    try {
-      const idToken = await this.userService.getIdToken();
-      const response = await fetch('/api/summarize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({
-          title,
-          description,
-          products: this.productService
-            .allProducts()
-            .map(({ id, name, description }) => ({ id, name, description })),
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error ?? 'Summary generation failed');
-      }
-
-      this.notificationData.update((data) => ({ ...data, summary: result.summary }));
-
-      const suggested: string[] = result.suggestedProductIds ?? [];
-      const missing = suggested.filter((id) => !this.selectedProducts().includes(id));
-      if (this.selectedProducts().length === 0) {
-        this.selectedProducts.set(suggested);
-      } else if (missing.length > 0) {
-        const names = missing
-          .map((id) => this.productService.allProducts().find((p) => p.id === id)?.name)
-          .join(', ');
-        this.toast.show(`Also affects ${names}?`, 'info', 8000, {
-          label: 'Add',
-          callback: () => this.selectedProducts.update((ids) => [...ids, ...missing]),
-        });
-      }
-    } catch (error) {
-      this.toast.error(error instanceof Error ? error.message : 'Summary generation failed');
-    } finally {
-      this.drafting.set(false);
-    }
   }
 
   protected toggleProduct(productId: string): void {

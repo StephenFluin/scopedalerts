@@ -62,11 +62,6 @@
   font: inherit;
   font-size: var(--font-size-sm);
   cursor: pointer;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: progress;
-  }
 }
 
 .markdown-preview {

@@ -17,7 +17,6 @@ import {
   renderSitemap,
 } from './server/feeds';
 import { getSiteData, resolveProducts } from './server/site-data';
-import { summarizeHandler } from './server/summarize';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -148,11 +147,6 @@ app.get(
     });
   })
 );
-
-/**
- * AI-drafted TL;DR and suggested products for a notification (admins only).
- */
-app.post('/api/summarize', express.json({ limit: '64kb' }), summarizeHandler);
 
 /**
  * Serve static files from /browser. Hashed build output is immutable; everything else

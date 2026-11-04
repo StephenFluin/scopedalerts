@@ -116,12 +116,7 @@
       </div>
 
       <div class="form-field">
-        <div class="label-row">
-          <label for="summary">TL;DR (optional)</label>
-          <button type="button" class="link-btn" (click)="draftSummary()" [disabled]="drafting()">
-            {{ drafting() ? 'Drafting…' : '✨ Draft with AI' }}
-          </button>
-        </div>
+        <label for="summary">TL;DR (optional)</label>
         <textarea
           id="summary"
           [formField]="notificationForm.summary"
