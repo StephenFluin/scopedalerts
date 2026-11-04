@@ -39,11 +39,11 @@
     "rss": "^1.2.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@angular/build": "^22.2.2",
-    "@angular/cli": "^22.2.2",
+    "@angular/cli": "^22.2.5",
     "@angular/compiler-cli": "^22.2.1",
     "@types/express": "^5.0.1",
     "@types/node": "^20.17.19",
