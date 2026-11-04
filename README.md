@@ -1,5 +1,7 @@
 # ScopedAlerts
 
+Live at https://alerts.fluin.io
+
 A modern Angular application for managing product notifications with Firebase backend integration.
 
 ## Features
